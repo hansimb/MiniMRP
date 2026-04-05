@@ -1,45 +1,40 @@
-# MiniMRP – Initial Project Planning
+# MiniMRP - Initial Project Planning
 
 ## 1. Project Overview
 
-MiniMRP is a lightweight, open-source MRP system for small businesses, focusing on:
+MiniMRP is a lightweight internal MRP system for Spectrum Audio Instruments (SAI), built to support the practical day-to-day needs of a small manufacturer handling electronic products, components, BOMs, and inventory.
 
-- Component and material management
-- BOM versioning
-- Inventory tracking (net and gross requirements)
-- Excel import/export
-- Backend flexibility: designed to work with Supabase initially, but can be adapted to Firebase or a custom backend (database, auth, API) in the future
+The purpose of the system is to make internal material and product data easier to manage, reduce manual spreadsheet work, and improve visibility into what is needed for production.
 
 #### Design Philosophy
 
-MiniMRP follows a minimalist approach: do one thing really well—material and inventory management—while keeping complexity and maintenance low. The system is designed for reusability and modularity, ensuring that components, BOMs, and inventory logic can be easily extended or adapted in the future without bloating the core functionality. Front-end code is designed to be reusable for both web deployment and optional local/offline UI, e.g., wrapped in Electron.
+MiniMRP will be built as a tailored internal tool for one real business use case. The system should stay simple, maintainable, and focused on the actual workflow: managing products, versions, components, suppliers, inventory, attachments, and Excel-based bulk data updates.
 
 ## 2. Goals
 
-- Simple, easy-to-use back-office for small business owners
-- Open-source and general-purpose
+- Simple and practical internal back-office for SAI
+- Reduce manual work in BOM, component, and inventory management
 
 ## 3. Architecture
 
-- **Front-end:** Next.js, with simple routing from any frontoffice `/admin` route
-- **Back-end:** Supabase (PostgreSQL, auth, API) as the initial implementation
-- **Data storage:** Supabase tables for components, categories, products, BOMs, inventory
-- **Deployment:** Cloud (Vercel); front-end code can also run locally via optional lightweight wrapper (Electron) for offline/local use
-- **Offline mode / local UI:** idea for easy-to-use local hosting with minimal setup and no technical knowledge required
+- **Front-end:** Next.js admin UI
+- **Back-end:** Supabase as the initial implementation
+- **Data storage:** Fixed relational schema based on the current SAI workflow and data model
+- **Structure:** Simple project structure with clear separation between UI, data access, and business logic, without unnecessary abstraction
+- **Deployment:** Cloud-hosted web app, with local development kept straightforward
 
 ## 4. Features
 
-- Component catalog and categories
-- Product BOMs with versioning
-  - Product files like: .cad, .sch, etc. for each version
-- Inventory tracking (current stock, net/gross requirements)
-- Excel import for bulk data
-- Modular and scalable design for future expansion
-- Budgeting/cost management
-- Component lead time-based production scheduling (production start date estimation)
+- Product and version management
+- BOM management by product version
+- Component master and supplier data management
+- Inventory tracking
+- Attachments for product versions such as CAD, schematic, or other files
+- Excel import/export for bulk updates
+- Basic cost visibility and lead time-aware purchasing / production planning
 
 ## 5. Future Considerations
 
-- Multi-tenant support
-- Optional ERP modules (HR, accounting, purchasing) (MiniMRP -> MiniERP)
-- Potential support for alternative backends if needed
+- Better reporting for purchasing and production planning
+- Tighter integration with other internal tools or commerce data if needed
+- Additional features added only when real business need is confirmed
