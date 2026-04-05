@@ -2,6 +2,7 @@
 
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
+import { applyInventoryAdjustment } from "@/lib/mappers/inventory";
 import { createSupabaseClient } from "./client";
 
 async function recordHistory(args: {
@@ -473,9 +474,10 @@ export async function updateInventoryAction(formData: FormData) {
 export async function adjustInventoryDeltaAction(formData: FormData) {
   const supabase = createSupabaseClient();
   const componentId = requiredValue(formData.get("component_id"), "Component id");
-  const delta = Number(requiredValue(formData.get("delta"), "Delta"));
+  const mode = requiredValue(formData.get("mode"), "Mode") as "add" | "remove";
+  const amount = Number(requiredValue(formData.get("amount"), "Amount"));
   const currentQuantity = Number(requiredValue(formData.get("current_quantity"), "Current quantity"));
-  const nextQuantity = Math.max(currentQuantity + delta, 0);
+  const nextQuantity = applyInventoryAdjustment(currentQuantity, mode, amount);
 
   const result = await supabase.from("inventory").upsert(
     {
@@ -493,13 +495,14 @@ export async function adjustInventoryDeltaAction(formData: FormData) {
     entity_type: "inventory",
     entity_id: componentId,
     action_type: "adjust",
-    summary: `Adjusted inventory for component ${componentId} by ${delta}, new quantity ${nextQuantity}`,
+    summary: `${mode === "add" ? "Added" : "Removed"} ${amount} for component ${componentId}, new quantity ${nextQuantity}`,
     old_value: stringifyHistoryValue({ component_id: componentId, quantity_available: currentQuantity }),
     new_value: stringifyHistoryValue({ component_id: componentId, quantity_available: nextQuantity })
   });
 
   revalidatePath("/components");
   revalidatePath("/inventory");
+  revalidatePath("/purchasing");
   redirect("/inventory");
 }
 

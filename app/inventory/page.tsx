@@ -138,8 +138,15 @@ export default async function InventoryPage(props: {
                             <input type="hidden" name="current_quantity" value={item.quantity_available} />
                             <div className="small muted">Current quantity: {item.quantity_available}</div>
                             <div className="field-group">
-                              <label htmlFor={`inventory-delta-${item.id}`}>Adjust by</label>
-                              <input id={`inventory-delta-${item.id}`} className="input" type="number" step="1" name="delta" placeholder="Add or subtract amount, e.g. 10 or -5" />
+                              <label htmlFor={`inventory-mode-${item.id}`}>Action</label>
+                              <select id={`inventory-mode-${item.id}`} className="select" name="mode" defaultValue="add">
+                                <option value="add">Add</option>
+                                <option value="remove">Remove</option>
+                              </select>
+                            </div>
+                            <div className="field-group">
+                              <label htmlFor={`inventory-amount-${item.id}`}>Amount</label>
+                              <input id={`inventory-amount-${item.id}`} className="input" type="number" min="0" step="1" name="amount" placeholder="Enter quantity" />
                             </div>
                             <button className="button primary" type="submit">
                               Update stock

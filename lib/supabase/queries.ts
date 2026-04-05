@@ -1,4 +1,5 @@
 import { createSupabaseClient } from "./client";
+import { unstable_noStore as noStore } from "next/cache";
 import { buildPurchasingBuckets } from "@/lib/mappers/mrp";
 import type {
   Attachment,
@@ -27,6 +28,7 @@ async function safeSelect<T>(query: PromiseLike<{ data: T[] | null; error: { mes
 }
 
 export async function getProducts(): Promise<{ items: ProductListItem[]; error: string | null }> {
+  noStore();
   const supabase = createSupabaseClient();
   const productsResult = await safeSelect<Product>(
     supabase.from("products").select("id,name,image").order("name")
@@ -47,6 +49,7 @@ export async function getProducts(): Promise<{ items: ProductListItem[]; error: 
 }
 
 export async function getAppSettings(): Promise<{ item: AppSettings | null; error: string | null }> {
+  noStore();
   const supabase = createSupabaseClient();
   const result = await supabase
     .from("app_settings")
@@ -65,6 +68,7 @@ export async function getAppSettings(): Promise<{ item: AppSettings | null; erro
 }
 
 export async function getProductById(id: string): Promise<{ item: ProductDetail | null; error: string | null }> {
+  noStore();
   const supabase = createSupabaseClient();
   const productResult = await supabase
     .from("products")
@@ -98,6 +102,7 @@ export async function getProductById(id: string): Promise<{ item: ProductDetail 
 }
 
 export async function getVersionById(id: string): Promise<{ item: VersionDetail | null; error: string | null }> {
+  noStore();
   const supabase = createSupabaseClient();
   const versionResult = await supabase
     .from("product_versions")
@@ -209,6 +214,7 @@ export async function getComponents(filters?: {
   category?: string;
   search?: string;
 }): Promise<{ items: ComponentListItem[]; error: string | null }> {
+  noStore();
   const supabase = createSupabaseClient();
   const componentsQuery = supabase
     .from("components")
@@ -286,6 +292,7 @@ export async function getComponents(filters?: {
 }
 
 export async function getComponentById(id: string): Promise<{ item: ComponentDetail | null; error: string | null }> {
+  noStore();
   const supabase = createSupabaseClient();
   const componentResult = await supabase
     .from("components")
@@ -361,6 +368,7 @@ export async function getInventory(filters?: {
   category?: string;
   search?: string;
 }): Promise<{ items: Array<InventoryItem & { component: ComponentMaster | null }>; error: string | null }> {
+  noStore();
   const supabase = createSupabaseClient();
   const [inventoryResult, componentsResult] = await Promise.all([
     safeSelect<InventoryItem>(
@@ -403,6 +411,7 @@ export async function getPurchasingOverview(): Promise<{
   nearSafety: PurchasingItem[];
   error: string | null;
 }> {
+  noStore();
   const supabase = createSupabaseClient();
   const [componentsResult, inventoryResult, linksResult, sellersResult] = await Promise.all([
     safeSelect<ComponentMaster>(
@@ -454,6 +463,7 @@ export async function getPurchasingOverview(): Promise<{
 }
 
 export async function getHistory(): Promise<{ items: HistoryEvent[]; error: string | null }> {
+  noStore();
   const supabase = createSupabaseClient();
   const result = await safeSelect<HistoryEvent>(
     supabase
