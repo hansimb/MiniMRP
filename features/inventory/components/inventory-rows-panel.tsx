@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { PartPicker } from "@/features/parts/components/part-picker";
 import {
   addInventoryAction,
   adjustInventoryDeltaAction,
@@ -20,19 +21,16 @@ export function InventoryRowsPanel(props: {
       actions={
         <ModalTrigger buttonLabel="Add inventory" buttonClassName="button primary" title="Add inventory">
           <form action={addInventoryAction} className="stack">
-            <div className="field-group">
-              <label htmlFor="inventory-component">Component</label>
-              <select id="inventory-component" className="select" name="component_id" defaultValue="">
-                <option value="" disabled>
-                  Select component
-                </option>
-                {props.parts.map((part) => (
-                  <option key={part.id} value={part.id}>
-                    {part.name} - {part.category}
-                  </option>
-                ))}
-              </select>
-            </div>
+            <PartPicker
+              parts={props.parts.map((part) => ({
+                id: part.id,
+                name: part.name,
+                category: part.category,
+                value: part.value
+              }))}
+              categoryFieldId="inventory-part-category-filter"
+              componentFieldId="inventory-component"
+            />
             <div className="field-group">
               <label htmlFor="inventory-quantity">Quantity available</label>
               <input id="inventory-quantity" className="input" type="number" step="1" min="0" name="quantity_available" />
@@ -101,7 +99,30 @@ export function InventoryRowsPanel(props: {
                           </button>
                         </form>
                       </ModalTrigger>
-                      <ModalTrigger buttonLabel="X" buttonClassName="button danger" title={`Delete inventory row: ${item.component?.name ?? item.id}?`}>
+                      <ModalTrigger
+                        buttonLabel={
+                          <svg
+                            aria-hidden="true"
+                            viewBox="0 0 24 24"
+                            width="16"
+                            height="16"
+                            fill="none"
+                            stroke="currentColor"
+                            strokeWidth="2"
+                            strokeLinecap="round"
+                            strokeLinejoin="round"
+                          >
+                            <path d="M3 6h18" />
+                            <path d="M8 6V4h8v2" />
+                            <path d="M19 6l-1 14H6L5 6" />
+                            <path d="M10 11v6" />
+                            <path d="M14 11v6" />
+                          </svg>
+                        }
+                        buttonAriaLabel={`Delete inventory row for ${item.component?.name ?? item.id}`}
+                        buttonClassName="button danger"
+                        title={`Delete inventory row: ${item.component?.name ?? item.id}?`}
+                      >
                         <form action={deleteInventoryAction} className="stack">
                           <input type="hidden" name="id" value={item.id} />
                           <div className="notice error">

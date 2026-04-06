@@ -11,8 +11,16 @@ interface PickerPart {
 
 export function PartPicker(props: {
   parts: PickerPart[];
+  categoryFieldId?: string;
+  componentFieldId?: string;
+  componentFieldName?: string;
+  componentLabel?: string;
 }) {
   const [category, setCategory] = useState("all");
+  const categoryFieldId = props.categoryFieldId ?? "part-category-filter";
+  const componentFieldId = props.componentFieldId ?? "part-id";
+  const componentFieldName = props.componentFieldName ?? "component_id";
+  const componentLabel = props.componentLabel ?? "Component";
 
   const categories = Array.from(new Set(props.parts.map((part) => part.category))).sort();
   const filteredParts = props.parts.filter((part) =>
@@ -22,9 +30,9 @@ export function PartPicker(props: {
   return (
     <>
       <div className="field-group">
-        <label htmlFor="version-part-category-filter">Category</label>
+        <label htmlFor={categoryFieldId}>Category</label>
         <select
-          id="version-part-category-filter"
+          id={categoryFieldId}
           className="select"
           value={category}
           onChange={(event) => setCategory(event.target.value)}
@@ -38,8 +46,13 @@ export function PartPicker(props: {
         </select>
       </div>
       <div className="field-group">
-        <label htmlFor="version-part-id">Component</label>
-        <select id="version-part-id" className="select" name="component_id" defaultValue="">
+        <label htmlFor={componentFieldId}>{componentLabel}</label>
+        <select
+          id={componentFieldId}
+          className="select"
+          name={componentFieldName}
+          defaultValue=""
+        >
           <option value="" disabled>
             Select component
           </option>

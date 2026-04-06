@@ -4,8 +4,9 @@ import { useRef } from "react";
 import type { ReactNode } from "react";
 
 export function ModalTrigger(props: {
-  buttonLabel: string;
+  buttonLabel: ReactNode;
   buttonClassName?: string;
+  buttonAriaLabel?: string;
   title: string;
   children: ReactNode;
 }) {
@@ -16,6 +17,7 @@ export function ModalTrigger(props: {
       <button
         className={props.buttonClassName ?? "button subtle"}
         type="button"
+        aria-label={props.buttonAriaLabel}
         onClick={() => dialogRef.current?.showModal()}
       >
         {props.buttonLabel}
