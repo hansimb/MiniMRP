@@ -16,6 +16,10 @@ const navigation = [
 export function AppShell({ children }: { children: ReactNode }) {
   const pathname = usePathname();
 
+  if (pathname === "/demo-access") {
+    return <main>{children}</main>;
+  }
+
   return (
     <div className="shell">
       <aside className="sidebar">

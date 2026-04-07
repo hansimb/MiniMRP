@@ -64,6 +64,12 @@ npm install
 
 2. Add your Supabase keys to `.env`.
 
+Add a demo password as well if you want to protect a public demo deployment:
+
+```bash
+DEMO_ACCESS_PASSWORD=your-demo-password
+```
+
 3. Run the latest schema and seed in Supabase SQL Editor:
 
 - [`supabase/schema.sql`](./supabase/schema.sql)
