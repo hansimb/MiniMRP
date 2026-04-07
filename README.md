@@ -1,4 +1,4 @@
-# MiniElectronicsMRP
+# MiniMRP
 
 MiniMRP is a small internal MRP (material requirements planning) system for small businesses specializing electronic products. It is designed to manage products, versions, BOMs, components, inventory, production entries, and purchasing needs without the overhead of a full ERP system.
 
