@@ -1,8 +1,8 @@
-# MiniMRP
+# MiniElectronicsMRP
 
-MiniMRP is a small internal production planning and inventory application for electronic products. It is designed to manage products, versions, BOMs, components, inventory, production entries, and purchasing needs without the overhead of a full ERP system.
+MiniMRP is a small internal MRP (material requirements planning) system for small businesses specializing electronic products. It is designed to manage products, versions, BOMs, components, inventory, production entries, and purchasing needs without the overhead of a full ERP system.
 
-The project is currently at a strong internal demo stage: core product, BOM, inventory, production, purchasing, export, and history flows are implemented, while production-ready authentication, tighter security, and more complete import persistence are still planned for the next phase.
+This current version (or branch) of the project is at a internal demo stage, while production-ready authentication, tighter security, and more complete import persistence are still planned for the next phases.
 
 ## Main Features
 
