@@ -1,4 +1,4 @@
-.env
+.env*
 .env.local
 node_modules
 .next
@@ -7,3 +7,4 @@ coverage
 dist
 TODOs.md
 /component_lists
+/docs/private
