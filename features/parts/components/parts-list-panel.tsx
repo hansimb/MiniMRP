@@ -14,6 +14,7 @@ export function PartsListPanel(props: {
         <ModalTrigger buttonLabel="Add component" buttonClassName="button primary" title="Add component">
           <form action={createPartAction} className="stack">
             <div className="toolbar">
+              <input className="input" name="sku" placeholder="SKU" />
               <input className="input" name="name" placeholder="Component name" />
               <input className="input" name="category" placeholder="Category" />
               <input className="input" name="producer" placeholder="Producer" />
@@ -38,6 +39,7 @@ export function PartsListPanel(props: {
           <table>
             <thead>
               <tr>
+                <th>SKU</th>
                 <th>Name</th>
                 <th>Category</th>
                 <th>Producer</th>
@@ -49,6 +51,7 @@ export function PartsListPanel(props: {
             <tbody>
               {props.parts.map((part) => (
                 <tr key={part.id}>
+                  <td>{part.sku}</td>
                   <td>{part.name}</td>
                   <td>{part.category}</td>
                   <td>{part.producer}</td>

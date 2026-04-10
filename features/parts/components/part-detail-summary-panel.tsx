@@ -9,6 +9,10 @@ export function PartDetailSummaryPanel(props: { part: ComponentDetail | null }) 
     <Panel title="Component" description="Edit the component master here to update the same component everywhere.">
       <div className="detail-list">
         <div className="detail-item">
+          <span>SKU</span>
+          <strong>{part?.sku ?? "-"}</strong>
+        </div>
+        <div className="detail-item">
           <span>Name</span>
           <strong>{part?.name ?? "-"}</strong>
         </div>
@@ -28,6 +32,10 @@ export function PartDetailSummaryPanel(props: { part: ComponentDetail | null }) 
           <ModalTrigger buttonLabel="Edit" title={`Edit ${part.name}`}>
             <form action={updatePartAction} className="stack">
               <input type="hidden" name="id" value={part.id} />
+              <div className="field-group">
+                <label htmlFor="component-sku">SKU</label>
+                <input id="component-sku" className="input" name="sku" defaultValue={part.sku} />
+              </div>
               <div className="field-group">
                 <label htmlFor="component-name">Name</label>
                 <input id="component-name" className="input" name="name" defaultValue={part.name} />

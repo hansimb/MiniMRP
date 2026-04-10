@@ -9,7 +9,7 @@ export async function updatePartAction(formData: FormData) {
   const id = requiredValue(formData.get("id"), "Component id");
   const previous = await supabase
     .from("components")
-    .select("id,name,category,producer,value,safety_stock")
+    .select("id,sku,name,category,producer,value,safety_stock")
     .eq("id", id)
     .maybeSingle();
 
@@ -18,6 +18,7 @@ export async function updatePartAction(formData: FormData) {
   }
 
   const nextComponent = {
+    sku: requiredValue(formData.get("sku"), "SKU"),
     name: requiredValue(formData.get("name"), "Name"),
     category: requiredValue(formData.get("category"), "Category"),
     producer: requiredValue(formData.get("producer"), "Producer"),
@@ -70,6 +71,7 @@ export async function createPartAction(formData: FormData) {
 
   const defaultSafetyStock = settingsResult.data?.default_safety_stock ?? 25;
   const componentPayload = {
+    sku: requiredValue(formData.get("sku"), "SKU"),
     name: requiredValue(formData.get("name"), "Name"),
     category: requiredValue(formData.get("category"), "Category"),
     producer: requiredValue(formData.get("producer"), "Producer"),
@@ -80,8 +82,8 @@ export async function createPartAction(formData: FormData) {
   const insertResult = await supabase
     .from("components")
     .insert(componentPayload)
-    .select("id,name,category,producer,value,safety_stock")
-    .single<{ id: string; name: string; category: string; producer: string; value: string | null; safety_stock: number }>();
+    .select("id,sku,name,category,producer,value,safety_stock")
+    .single<{ id: string; sku: string; name: string; category: string; producer: string; value: string | null; safety_stock: number }>();
 
   if (insertResult.error || !insertResult.data) {
     throw new Error(insertResult.error?.message ?? "Could not create component.");
@@ -160,7 +162,7 @@ export async function deletePartAction(formData: FormData) {
   const id = requiredValue(formData.get("id"), "Component id");
   const previous = await supabase
     .from("components")
-    .select("id,name,category,producer,value,safety_stock")
+    .select("id,sku,name,category,producer,value,safety_stock")
     .eq("id", id)
     .maybeSingle();
 
@@ -286,7 +288,7 @@ export async function updatePartSafetyStockAction(formData: FormData) {
   const returnTo = optionalValue(formData.get("returnTo"));
   const previous = await supabase
     .from("components")
-    .select("id,name,category,producer,value,safety_stock")
+    .select("id,sku,name,category,producer,value,safety_stock")
     .eq("id", id)
     .maybeSingle();
 

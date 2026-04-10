@@ -10,7 +10,7 @@ export function PartsFiltersPanel(props: {
         <SearchFilterForm
           defaultSearch={props.defaultSearch}
           defaultCategory={props.defaultCategory}
-          searchPlaceholder="Search by name, producer, value"
+          searchPlaceholder="Search by SKU, name, producer, value"
         />
       </div>
     </Panel>

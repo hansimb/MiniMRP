@@ -55,7 +55,7 @@ export async function getVersionDetail(id: string): Promise<{ item: VersionDetai
           .order("reference")
       ),
       safeSelect<ComponentMaster>(
-        supabase.from("components").select("id,name,category,producer,value,safety_stock")
+        supabase.from("components").select("id,sku,name,category,producer,value,safety_stock")
       ),
       safeSelect<InventoryItem>(
         supabase.from("inventory").select("id,component_id,quantity_available,purchase_price")

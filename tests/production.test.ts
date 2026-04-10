@@ -50,6 +50,7 @@ test("buildMrpRows carries reserved production metadata for UI display", () => {
       {
         component: {
           id: "1",
+          sku: "MCU-STM32F4",
           name: "STM32 MCU",
           category: "IC",
           producer: "ST",

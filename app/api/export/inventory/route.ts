@@ -11,6 +11,7 @@ export async function GET(request: Request) {
 
   const csv = rowsToCsv(
     items.map((item) => ({
+      sku: item.component?.sku ?? "",
       component: item.component?.name ?? "",
       category: item.component?.category ?? "",
       producer: item.component?.producer ?? "",

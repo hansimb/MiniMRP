@@ -12,6 +12,7 @@ export interface ProductVersion {
 
 export interface ComponentMaster {
   id: string;
+  sku: string;
   name: string;
   category: string;
   producer: string;

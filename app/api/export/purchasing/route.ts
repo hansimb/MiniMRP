@@ -7,6 +7,7 @@ export async function GET() {
 
   const csv = rowsToCsv(
     shortages.map((item) => ({
+      sku: item.sku,
       component: item.name,
       category: item.category,
       producer: item.producer,

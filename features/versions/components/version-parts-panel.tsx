@@ -77,6 +77,10 @@ export function VersionPartsPanel(props: {
                           <input type="hidden" name="id" value={row.component.id} />
                           <input type="hidden" name="versionId" value={props.versionId} />
                           <div className="field-group">
+                            <label htmlFor={`version-part-sku-${row.component.id}`}>SKU</label>
+                            <input id={`version-part-sku-${row.component.id}`} className="input" name="sku" defaultValue={row.component.sku} />
+                          </div>
+                          <div className="field-group">
                             <label htmlFor={`version-part-name-${row.component.id}`}>Name</label>
                             <input id={`version-part-name-${row.component.id}`} className="input" name="name" defaultValue={row.component.name} />
                           </div>

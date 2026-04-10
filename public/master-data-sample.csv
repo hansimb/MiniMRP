@@ -1,0 +1,9 @@
+component_sku,component_name,component_category,component_producer,component_value,component_safety_stock,inventory_quantity_available,inventory_purchase_price,seller_name,seller_base_url,seller_lead_time_days,seller_product_url
+SEN-AURORA-9DOF,Aurora 9DoF Motion Node,Sensor Module,Nova Circuit Works,I2C IMU module,24,68,6.45,Northbridge Parts,https://northbridge.parts,6,https://northbridge.parts/aurora-9dof
+REG-QUILL-33,Quill 3.3V Rail Keeper,Power Module,Voltforge Labs,3.3V regulator board,18,41,2.18,Copper Harbor Supply,https://copperharbor.example,4,https://copperharbor.example/quill-33
+OSC-LUNAR-12,Lunar 12MHz Clock Tile,Timing,Ferrox Dynamics,12MHz oscillator,30,120,0.74,Northbridge Parts,https://northbridge.parts,6,https://northbridge.parts/lunar-12
+CON-HARBOR-8P,Harbor 8P Link Header,Connector,Portwell Studio,8-pin board header,40,190,0.19,Atlas Junction,https://atlasjunction.example,3,https://atlasjunction.example/harbor-8p
+SW-EMBER-TACT,Ember Tact Switch,Switch,Kindle Mechanics,SPST tactile switch,55,260,0.11,Copper Harbor Supply,https://copperharbor.example,4,https://copperharbor.example/ember-tact
+LED-POLARIS-AMBER,Polaris Amber Beacon,Indicator,Luma Foundry,amber diffused LED,36,144,0.27,Atlas Junction,https://atlasjunction.example,3,https://atlasjunction.example/polaris-amber
+SEN-AURORA-9DOF,Aurora 9DoF Motion Node,Sensor Module,Nova Circuit Works,I2C IMU module,24,68,6.45,Delta Crate Electronics,https://delta-crate.example,8,https://delta-crate.example/aurora-9dof
+LED-POLARIS-AMBER,Polaris Amber Beacon,Indicator,Luma Foundry,amber diffused LED,36,144,0.27,Delta Crate Electronics,https://delta-crate.example,8,https://delta-crate.example/polaris-amber

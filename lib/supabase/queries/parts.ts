@@ -23,7 +23,7 @@ export async function getPartCatalog(filters?: {
   const adminSupabase = createSupabaseAdminClient();
   const componentsQuery = supabase
     .from("components")
-    .select("id,name,category,producer,value,safety_stock")
+    .select("id,sku,name,category,producer,value,safety_stock")
     .order("category")
     .order("name");
 
@@ -33,7 +33,7 @@ export async function getPartCatalog(filters?: {
 
   if (filters?.search) {
     componentsQuery.or(
-      `name.ilike.%${filters.search}%,producer.ilike.%${filters.search}%,value.ilike.%${filters.search}%`
+      `sku.ilike.%${filters.search}%,name.ilike.%${filters.search}%,producer.ilike.%${filters.search}%,value.ilike.%${filters.search}%`
     );
   }
 
@@ -100,7 +100,7 @@ export async function getPartDetail(id: string): Promise<{ item: ComponentDetail
   const adminSupabase = createSupabaseAdminClient();
   const componentResult = await supabase
     .from("components")
-    .select("id,name,category,producer,value,safety_stock")
+    .select("id,sku,name,category,producer,value,safety_stock")
     .eq("id", id)
     .maybeSingle<ComponentMaster>();
 

@@ -25,7 +25,7 @@ export async function getPurchasingOverview(): Promise<{
   const adminSupabase = createSupabaseAdminClient();
   const [componentsResult, inventoryResult, linksResult, sellerLinksResult, sellersResult, productionRequirementsResult, productionEntriesResult, versionsResult] = await Promise.all([
     safeSelect<ComponentMaster>(
-      supabase.from("components").select("id,name,category,producer,value,safety_stock").order("category").order("name")
+      supabase.from("components").select("id,sku,name,category,producer,value,safety_stock").order("category").order("name")
     ),
     safeSelect<InventoryItem>(
       supabase.from("inventory").select("id,component_id,quantity_available,purchase_price")
@@ -168,6 +168,7 @@ export async function getPurchasingOverview(): Promise<{
     });
     return {
       id: component.id,
+      sku: component.sku,
       name: component.name,
       category: component.category,
       producer: component.producer,

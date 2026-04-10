@@ -2,37 +2,14 @@
 
 import { useState } from "react";
 import type { ReactNode } from "react";
-import Papa from "papaparse";
-import readXlsxFile from "read-excel-file";
+import { parseSpreadsheetFile } from "@/lib/import/master-data";
 import { Notice, Panel } from "@/shared/ui";
 
 type ImportRow = Record<string, string>;
 
 async function parseFile(file: File): Promise<ImportRow[]> {
-  const lowerName = file.name.toLowerCase();
-
-  if (lowerName.endsWith(".csv")) {
-    return new Promise((resolve, reject) => {
-      Papa.parse(file, {
-        header: true,
-        skipEmptyLines: true,
-        complete: (results) => resolve(results.data as ImportRow[]),
-        error: reject
-      });
-    });
-  }
-
-  const rows = await readXlsxFile(file);
-  if (rows.length === 0) {
-    return [];
-  }
-
-  const headers = rows[0].map((cell) => String(cell ?? "").trim());
-  return rows.slice(1).map((row) =>
-    headers.reduce<ImportRow>((accumulator, header, index) => {
-      accumulator[header] = String(row[index] ?? "");
-      return accumulator;
-    }, {})
+  return (await parseSpreadsheetFile(file)).map((row) =>
+    Object.fromEntries(Object.entries(row).map(([key, value]) => [key, String(value ?? "")]))
   );
 }
 
@@ -73,7 +50,7 @@ export function ImportPreview(props: {
         <input
           className="input"
           type="file"
-          accept=".csv,.xlsx,.xls"
+          accept=".csv,.xlsx,.xls,.ods"
           onChange={onFileChange}
         />
         <div className="small muted">{props.mappingHint}</div>

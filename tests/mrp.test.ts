@@ -15,6 +15,7 @@ test("buildMrpRows calculates quantities and costs", () => {
       {
         component: {
           id: "1",
+          sku: "RES-10K-0603",
           name: "Resistor",
           category: "Resistor",
           producer: "Yageo",
@@ -46,6 +47,7 @@ test("calculateVersionUnitCost sums one product cost", () => {
     {
         component: {
           id: "1",
+          sku: "CAP-100NF-0603",
           name: "Cap",
           category: "Capacitor",
           producer: "Murata",
@@ -130,6 +132,7 @@ test("buildMrpRows carries lead time through to results", () => {
       {
         component: {
           id: "1",
+          sku: "MCU-STM32F4",
           name: "MCU",
           category: "IC",
           producer: "ST",
@@ -160,6 +163,7 @@ test("buildPurchasingBuckets separates shortages and near-safety components", as
   const result = buildPurchasingBuckets([
     {
       id: "1",
+      sku: "IC-LOW-STOCK",
       name: "Low stock IC",
       category: "IC",
       producer: "TI",
@@ -171,6 +175,7 @@ test("buildPurchasingBuckets separates shortages and near-safety components", as
     },
     {
       id: "2",
+      sku: "CAP-NEAR-STOCK",
       name: "Near stock cap",
       category: "Capacitor",
       producer: "Murata",
@@ -182,6 +187,7 @@ test("buildPurchasingBuckets separates shortages and near-safety components", as
     },
     {
       id: "3",
+      sku: "RES-HEALTHY",
       name: "Healthy resistor",
       category: "Resistor",
       producer: "Yageo",

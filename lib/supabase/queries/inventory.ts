@@ -14,7 +14,7 @@ export async function getInventoryOverview(filters?: {
       supabase.from("inventory").select("id,component_id,quantity_available,purchase_price")
     ),
     safeSelect<ComponentMaster>(
-      supabase.from("components").select("id,name,category,producer,value,safety_stock").order("category").order("name")
+      supabase.from("components").select("id,sku,name,category,producer,value,safety_stock").order("category").order("name")
     )
   ]);
 
@@ -26,7 +26,7 @@ export async function getInventoryOverview(filters?: {
   if (filters?.search) {
     const needle = filters.search.toLowerCase();
     components = components.filter((component) =>
-      [component.name, component.producer, component.value ?? ""].some((value) =>
+      [component.sku, component.name, component.producer, component.value ?? ""].some((value) =>
         value.toLowerCase().includes(needle)
       )
     );

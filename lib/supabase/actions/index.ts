@@ -13,7 +13,7 @@ export {
   cancelProductionEntryAction,
   completeProductionEntryAction
 } from "./production";
-export { updateDefaultSafetyStockAction } from "./settings";
+export { importMasterDataAction, updateDefaultSafetyStockAction } from "./settings";
 export {
   attachPartToVersionAction,
   deleteVersionAction,

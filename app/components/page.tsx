@@ -1,9 +1,7 @@
-import { ImportPreview } from "@/features/import/import-preview";
 import { PartsFiltersPanel } from "@/features/parts/components/parts-filters-panel";
 import { PartsListPanel } from "@/features/parts/components/parts-list-panel";
-import { PartsSettingsModal } from "@/features/parts/components/parts-settings-modal";
-import { getAppSettings, getPartCatalog } from "@/lib/supabase/queries/index";
-import { Notice, PageHeader, ModalTrigger } from "@/shared/ui";
+import { getPartCatalog } from "@/lib/supabase/queries/index";
+import { Notice, PageHeader } from "@/shared/ui";
 
 export default async function ComponentsPage(props: {
   searchParams?: Promise<{ category?: string; search?: string }>;
@@ -13,13 +11,12 @@ export default async function ComponentsPage(props: {
     category: searchParams.category,
     search: searchParams.search
   });
-  const { item: settings } = await getAppSettings();
 
   return (
     <div className="page">
       <PageHeader
         title="Components"
-        description="Central component view with filters, categorization, import and export entry points."
+        description="Central component view with filters, categorization, and export entry points."
         actions={
           <>
             <a
@@ -28,15 +25,6 @@ export default async function ComponentsPage(props: {
             >
               Export CSV
             </a>
-            <ModalTrigger buttonLabel="Import CSV" title="Import components from CSV or Excel">
-              <ImportPreview
-                plain
-                title="Import components from CSV or Excel"
-                description="Bulk import entry point for component master data."
-                mappingHint="Next implementation step is adding field mapping UI and insert/update logic for components, sellers, and inventory rows."
-              />
-            </ModalTrigger>
-            <PartsSettingsModal settings={settings} />
           </>
         }
       />
@@ -48,7 +36,6 @@ export default async function ComponentsPage(props: {
         defaultCategory={searchParams.category}
       />
       <PartsListPanel parts={items} />
-
     </div>
   );
 }

@@ -1,8 +1,7 @@
-import { ImportPreview } from "@/features/import/import-preview";
 import { InventoryFiltersPanel } from "@/features/inventory/components/inventory-filters-panel";
 import { InventoryRowsPanel } from "@/features/inventory/components/inventory-rows-panel";
 import { getInventoryOverview, getPartCatalog } from "@/lib/supabase/queries/index";
-import { ModalTrigger, Notice, PageHeader } from "@/shared/ui";
+import { Notice, PageHeader } from "@/shared/ui";
 
 export default async function InventoryPage(props: {
   searchParams?: Promise<{ category?: string; search?: string }>;
@@ -27,14 +26,6 @@ export default async function InventoryPage(props: {
             >
               Export CSV
             </a>
-            <ModalTrigger buttonLabel="Import CSV" title="Import inventory from CSV or Excel">
-              <ImportPreview
-                plain
-                title="Import inventory from CSV or Excel"
-                description="Bulk inventory import entry point."
-                mappingHint="Expected target fields include component match, quantity_available and purchase_price. Next implementation step is persisting inventory rows to Supabase."
-              />
-            </ModalTrigger>
           </>
         }
       />

@@ -11,6 +11,7 @@ const navigation = [
   { href: "/inventory", label: "Inventory" },
   { href: "/production", label: "Production" },
   { href: "/purchasing", label: "Purchasing" },
+  { href: "/settings", label: "Settings" },
   { href: "/history", label: "History" }
 ];
 
@@ -49,9 +50,7 @@ export function AppShell({ children }: { children: ReactNode }) {
               })
             }
           >
-            <span className="nav-icon" aria-hidden="true">
-              ↪
-            </span>
+            <span className="nav-icon" aria-hidden="true">{`->`}</span>
             <span>Log out</span>
           </button>
         </nav>

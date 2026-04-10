@@ -1,0 +1,9 @@
+component_sku,component_name,component_category,component_producer,component_value,component_safety_stock,inventory_quantity_available,inventory_purchase_price,seller_name,seller_base_url,seller_lead_time_days,seller_product_url
+ADC-CASCADE-16,Cascade 16-bit Capture IC,Data Conversion,Helio Mesa,16-bit ADC,14,33,4.92,Signal Ridge Supply,https://signalridge.example,5,https://signalridge.example/cascade-16
+BUF-SHORELINE-4,Shoreline Quad Buffer,Logic,Vector Lantern,quad signal buffer,22,74,1.63,Granite Path Components,https://granitepath.example,7,https://granitepath.example/shoreline-4
+MEM-EMBER-EEP8,Ember EEPROM 8K,Memory,Nimble Peak,8K serial EEPROM,16,58,0.88,Signal Ridge Supply,https://signalridge.example,5,https://signalridge.example/ember-eep8
+FET-GLACIER-P,Glacier P-Channel Gate,FET,North Current Semi,P-channel MOSFET,20,81,0.42,Mariner Bench,https://marinerbench.example,6,https://marinerbench.example/glacier-p
+CON-ORBIT-MINI,Orbit Mini Debug Port,Connector,Terra Loom,compact debug connector,28,109,0.34,Granite Path Components,https://granitepath.example,7,https://granitepath.example/orbit-mini
+DSP-MERIDIAN-1,Meridian Audio Core,DSP,Blue Hollow Chips,audio DSP,12,19,7.8,Mariner Bench,https://marinerbench.example,6,https://marinerbench.example/meridian-1
+ADC-CASCADE-16,Cascade 16-bit Capture IC,Data Conversion,Helio Mesa,16-bit ADC,14,33,4.92,Cloudline Stockroom,https://cloudline-stockroom.example,9,https://cloudline-stockroom.example/cascade-16
+DSP-MERIDIAN-1,Meridian Audio Core,DSP,Blue Hollow Chips,audio DSP,12,19,7.8,Cloudline Stockroom,https://cloudline-stockroom.example,9,https://cloudline-stockroom.example/meridian-1
