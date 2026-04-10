@@ -1,5 +1,6 @@
 import Link from "next/link";
-import { Badge, EmptyState, Notice, PageHeader, Panel } from "@/shared/ui";
+import { createProductAction } from "@/lib/supabase/actions/index";
+import { Badge, EmptyState, ModalTrigger, Notice, PageHeader, Panel } from "@/shared/ui";
 import { getProductList } from "@/lib/supabase/queries/index";
 
 export default async function ProductsPage() {
@@ -22,7 +23,23 @@ export default async function ProductsPage() {
         </Notice>
       ) : null}
 
-      <Panel title="All products" description="Tailored product list for daily internal use.">
+      <Panel
+        title="All products"
+        description="Tailored product list for daily internal use."
+        actions={
+          <ModalTrigger buttonLabel="Add product" buttonClassName="button primary" title="Add product">
+            <form action={createProductAction} className="stack">
+              <label className="field-group">
+                <span>Name</span>
+                <input className="input" name="name" placeholder="Product name" required />
+              </label>
+              <button className="button primary" type="submit">
+                Create product
+              </button>
+            </form>
+          </ModalTrigger>
+        }
+      >
         {items.length === 0 ? (
           <EmptyState>No products found yet.</EmptyState>
         ) : (

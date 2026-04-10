@@ -7,7 +7,7 @@ export {
   updatePartSafetyStockAction,
   upsertPartSellerLinkAction
 } from "./parts";
-export { createVersionAction, updateProductAction } from "./products";
+export { createProductAction, createVersionAction, updateProductAction } from "./products";
 export {
   addProductionEntryAction,
   cancelProductionEntryAction,
