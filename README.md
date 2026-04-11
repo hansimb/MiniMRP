@@ -92,3 +92,5 @@ npm run dev
 - Production and purchasing flows depend on the latest Supabase schema being applied.
 - Import UI exists already, while some bulk import persistence flows are still designed to be extended further.
 - This version is suitable for a live internal demo branch, but production rollout still needs stronger import logic, authentication, and security hardening.
+
+--
