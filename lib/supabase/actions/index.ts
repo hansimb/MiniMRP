@@ -23,5 +23,6 @@ export {
   attachPartToVersionAction,
   deleteVersionAction,
   removePartFromVersionAction,
+  updateVersionComponentReferencesAction,
   updateVersionAction
 } from "./versions";

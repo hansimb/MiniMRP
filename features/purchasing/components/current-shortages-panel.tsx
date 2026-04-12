@@ -1,4 +1,5 @@
 import type { PurchasingItem } from "@/lib/types/domain";
+import { normalizeExternalUrl } from "@/lib/mappers/urls";
 import { upsertPartSellerLinkAction } from "@/lib/supabase/actions/index";
 import { EmptyState, ModalTrigger, Panel } from "@/shared/ui";
 
@@ -31,7 +32,10 @@ export function CurrentShortagesPanel(props: { shortages: PurchasingItem[] }) {
             <tbody>
               {props.shortages.map((item) => (
                 <tr key={item.id}>
-                  <td>{item.name}</td>
+                  <td>
+                    <div>{item.name}</div>
+                    <div className="small muted">{item.sku}</div>
+                  </td>
                   <td>{item.category}</td>
                   <td>{item.gross_requirement}</td>
                   <td>{item.reserved_inventory}</td>
@@ -41,8 +45,13 @@ export function CurrentShortagesPanel(props: { shortages: PurchasingItem[] }) {
                   <td>{item.recommended_order_quantity}</td>
                   <td>{item.lead_time ?? "-"}</td>
                   <td>
-                    {item.seller_product_url ? (
-                      <a className="button-link subtle" href={item.seller_product_url} target="_blank" rel="noreferrer">
+                    {normalizeExternalUrl(item.seller_product_url ?? item.seller_base_url) ? (
+                      <a
+                        className="button-link subtle"
+                        href={normalizeExternalUrl(item.seller_product_url ?? item.seller_base_url) ?? "#"}
+                        target="_blank"
+                        rel="noreferrer"
+                      >
                         {item.seller_name ?? "View seller"}
                       </a>
                     ) : (

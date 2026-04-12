@@ -76,6 +76,59 @@ export async function removePartFromVersionAction(formData: FormData) {
   redirect(`/versions/${versionId}`);
 }
 
+export async function updateVersionComponentReferencesAction(formData: FormData) {
+  const supabase = createSupabaseAdminClient();
+  const versionId = requiredValue(formData.get("version_id"), "Version id");
+  const componentId = requiredValue(formData.get("component_id"), "Component id");
+  const references = normalizeReferencesInput(formData.get("references"));
+  const previous = await supabase
+    .schema(PRIVATE_SCHEMA)
+    .from(COMPONENT_REFERENCES_TABLE)
+    .select("version_id,component_master_id,reference")
+    .eq("version_id", versionId)
+    .eq("component_master_id", componentId);
+
+  if (previous.error) {
+    throw new Error(previous.error.message);
+  }
+
+  const deleteResult = await supabase
+    .schema(PRIVATE_SCHEMA)
+    .from(COMPONENT_REFERENCES_TABLE)
+    .delete()
+    .eq("version_id", versionId)
+    .eq("component_master_id", componentId);
+
+  if (deleteResult.error) {
+    throw new Error(deleteResult.error.message);
+  }
+
+  const insertResult = await supabase.schema(PRIVATE_SCHEMA).from(COMPONENT_REFERENCES_TABLE).upsert(
+    references.map((reference) => ({
+      version_id: versionId,
+      component_master_id: componentId,
+      reference
+    })),
+    { onConflict: "version_id,reference" }
+  );
+
+  if (insertResult.error) {
+    throw new Error(insertResult.error.message);
+  }
+
+  await recordHistory({
+    entity_type: "version",
+    entity_id: versionId,
+    action_type: "update_component_references",
+    summary: `Updated BOM references for component ${componentId} in version ${versionId}`,
+    old_value: stringifyHistoryValue(previous.data),
+    new_value: stringifyHistoryValue({ component_id: componentId, references })
+  });
+
+  revalidatePath(`/versions/${versionId}`);
+  redirect(`/versions/${versionId}`);
+}
+
 export async function updateVersionAction(formData: FormData) {
   const supabase = createSupabaseAdminClient();
   const id = requiredValue(formData.get("id"), "Version id");

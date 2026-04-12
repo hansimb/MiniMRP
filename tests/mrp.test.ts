@@ -214,7 +214,7 @@ test("buildPurchasingBuckets separates shortages and near-safety components", as
   assert.equal(result.nearSafety[1]?.id, "2");
 });
 
-test("buildProductionShortageMetrics keeps stored net need even when current inventory now covers gross demand", () => {
+test("buildProductionShortageMetrics clears current shortage when available inventory now covers the stored net need", () => {
   const metrics = buildProductionShortageMetrics({
     totalGrossRequirement: 40,
     totalNetRequirement: 12,
@@ -222,11 +222,11 @@ test("buildProductionShortageMetrics keeps stored net need even when current inv
     safetyStock: 25
   });
 
-  assert.equal(metrics.netNeed, 12);
-  assert.equal(metrics.recommendedOrderQuantity, 25);
+  assert.equal(metrics.netNeed, 0);
+  assert.equal(metrics.recommendedOrderQuantity, 0);
 });
 
-test("buildProductionShortageMetrics keeps shortage visibility based on stored net requirement", () => {
+test("buildProductionShortageMetrics hides shortages when current inventory exceeds the stored net requirement", () => {
   const metrics = buildProductionShortageMetrics({
     totalGrossRequirement: 40,
     totalNetRequirement: 12,
@@ -234,11 +234,11 @@ test("buildProductionShortageMetrics keeps shortage visibility based on stored n
     safetyStock: 25
   });
 
-  assert.equal(metrics.netNeed, 12);
-  assert.equal(metrics.recommendedOrderQuantity, 25);
+  assert.equal(metrics.netNeed, 0);
+  assert.equal(metrics.recommendedOrderQuantity, 0);
 });
 
-test("buildProductionShortageMetrics recommends only safety stock when gross need is already covered but stored net need remains", () => {
+test("buildProductionShortageMetrics does not recommend an order when current inventory already covers the stored net requirement", () => {
   const metrics = buildProductionShortageMetrics({
     totalGrossRequirement: 40,
     totalNetRequirement: 12,
@@ -246,11 +246,11 @@ test("buildProductionShortageMetrics recommends only safety stock when gross nee
     safetyStock: 25
   });
 
-  assert.equal(metrics.netNeed, 12);
-  assert.equal(metrics.recommendedOrderQuantity, 25);
+  assert.equal(metrics.netNeed, 0);
+  assert.equal(metrics.recommendedOrderQuantity, 0);
 });
 
-test("buildProductionShortageMetrics subtracts currently available stock from recommended order", () => {
+test("buildProductionShortageMetrics subtracts currently available stock from the current net need", () => {
   const metrics = buildProductionShortageMetrics({
     totalGrossRequirement: 200,
     totalNetRequirement: 100,
@@ -258,7 +258,7 @@ test("buildProductionShortageMetrics subtracts currently available stock from re
     safetyStock: 40
   });
 
-  assert.equal(metrics.netNeed, 100);
+  assert.equal(metrics.netNeed, 84);
   assert.equal(metrics.recommendedOrderQuantity, 124);
 });
 

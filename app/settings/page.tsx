@@ -3,7 +3,10 @@ import { getAppSettings } from "@/lib/supabase/queries/index";
 import { updateDefaultSafetyStockAction } from "@/lib/supabase/actions/index";
 import { Notice, PageHeader, Panel } from "@/shared/ui";
 
-export default async function SettingsPage() {
+export default async function SettingsPage(props: {
+  searchParams?: Promise<{ importError?: string }>;
+}) {
+  const searchParams = (await props.searchParams) ?? {};
   const { item: settings, error } = await getAppSettings();
 
   return (
@@ -15,7 +18,7 @@ export default async function SettingsPage() {
 
       {error ? <Notice error>{error}</Notice> : null}
 
-      <MasterDataImportPanel />
+      <MasterDataImportPanel initialError={searchParams.importError ?? null} />
 
       <Panel
         title="Component defaults"

@@ -1,4 +1,5 @@
 import type { ComponentDetail } from "@/lib/types/domain";
+import { normalizeExternalUrl } from "@/lib/mappers/urls";
 import {
   createSellerForPartAction,
   upsertPartSellerLinkAction
@@ -72,8 +73,13 @@ export function PartSellersPanel(props: { part: ComponentDetail | null }) {
                     </button>
                   </form>
                 </ModalTrigger>
-                {product_url ? (
-                  <a className="button-link subtle" href={product_url} target="_blank" rel="noreferrer">
+                {normalizeExternalUrl(product_url ?? seller.base_url) ? (
+                  <a
+                    className="button-link subtle"
+                    href={normalizeExternalUrl(product_url ?? seller.base_url) ?? "#"}
+                    target="_blank"
+                    rel="noreferrer"
+                  >
                     View
                   </a>
                 ) : (

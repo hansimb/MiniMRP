@@ -25,8 +25,8 @@ export function InventoryAdjustForm(props: {
           id={`${props.formId}-amount`}
           className="input"
           type="number"
-          min="0"
-          step="1"
+          min="0.0001"
+          step="0.0001"
           name="amount"
           required
         />

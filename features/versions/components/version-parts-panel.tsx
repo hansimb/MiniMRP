@@ -3,7 +3,7 @@ import { PartPicker } from "@/features/parts/components/part-picker";
 import {
   attachPartToVersionAction,
   removePartFromVersionAction,
-  updatePartAction
+  updateVersionComponentReferencesAction
 } from "@/lib/supabase/actions/index";
 import type { ComponentListItem, VersionDetail } from "@/lib/types/domain";
 import { EmptyState, ModalTrigger, Panel } from "@/shared/ui";
@@ -74,34 +74,21 @@ export function VersionPartsPanel(props: {
                       <Link className="button-link subtle" href={`/components/${row.component.id}`}>
                         View
                       </Link>
-                      <ModalTrigger buttonLabel="Edit" title={`Edit ${row.component.name}`}>
-                        <form action={updatePartAction} className="stack">
-                          <input type="hidden" name="id" value={row.component.id} />
-                          <input type="hidden" name="versionId" value={props.versionId} />
+                      <ModalTrigger buttonLabel="Edit references" title={`Edit references for ${row.component.name}`}>
+                        <form action={updateVersionComponentReferencesAction} className="stack">
+                          <input type="hidden" name="version_id" value={props.versionId} />
+                          <input type="hidden" name="component_id" value={row.component.id} />
                           <div className="field-group">
-                            <label htmlFor={`version-part-sku-${row.component.id}`}>SKU</label>
-                            <input id={`version-part-sku-${row.component.id}`} className="input" name="sku" defaultValue={row.component.sku} />
+                            <label htmlFor={`version-part-references-${row.component.id}`}>References</label>
+                            <input
+                              id={`version-part-references-${row.component.id}`}
+                              className="input"
+                              name="references"
+                              defaultValue={row.references.join(", ")}
+                              placeholder="References, e.g. R1, R2, R3"
+                            />
                           </div>
-                          <div className="field-group">
-                            <label htmlFor={`version-part-name-${row.component.id}`}>Name</label>
-                            <input id={`version-part-name-${row.component.id}`} className="input" name="name" defaultValue={row.component.name} />
-                          </div>
-                          <div className="field-group">
-                            <label htmlFor={`version-part-category-${row.component.id}`}>Category</label>
-                            <input id={`version-part-category-${row.component.id}`} className="input" name="category" defaultValue={row.component.category} />
-                          </div>
-                          <div className="field-group">
-                            <label htmlFor={`version-part-producer-${row.component.id}`}>Producer</label>
-                            <input id={`version-part-producer-${row.component.id}`} className="input" name="producer" defaultValue={row.component.producer} />
-                          </div>
-                          <div className="field-group">
-                            <label htmlFor={`version-part-value-${row.component.id}`}>Value</label>
-                            <input id={`version-part-value-${row.component.id}`} className="input" name="value" defaultValue={row.component.value ?? ""} />
-                          </div>
-                          <div className="field-group">
-                            <label htmlFor={`version-part-safety-${row.component.id}`}>Safety stock</label>
-                            <input id={`version-part-safety-${row.component.id}`} className="input" type="number" min="0" step="1" name="safety_stock" defaultValue={row.component.safety_stock} />
-                          </div>
+                          <div className="small muted">Quantity is derived from the number of references in this list.</div>
                           <button className="button primary" type="submit">
                             Save changes
                           </button>

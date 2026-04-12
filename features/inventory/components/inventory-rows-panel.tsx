@@ -33,7 +33,7 @@ export function InventoryRowsPanel(props: {
             />
             <div className="field-group">
               <label htmlFor="inventory-quantity">Quantity received</label>
-              <input id="inventory-quantity" className="input" type="number" step="1" min="0" name="quantity_received" required />
+              <input id="inventory-quantity" className="input" type="number" step="0.0001" min="0.0001" name="quantity_received" required />
             </div>
             <div className="field-group">
               <label htmlFor="inventory-price">Unit cost</label>
@@ -65,6 +65,7 @@ export function InventoryRowsPanel(props: {
           <table>
             <thead>
               <tr>
+                <th>SKU</th>
                 <th>Component</th>
                 <th>Category</th>
                 <th>Producer</th>
@@ -78,6 +79,7 @@ export function InventoryRowsPanel(props: {
             <tbody>
               {props.items.map((item) => (
                 <tr key={item.id}>
+                  <td>{item.component?.sku ?? "-"}</td>
                   <td>{item.component?.name ?? "-"}</td>
                   <td>{item.component?.category ?? "-"}</td>
                   <td>{item.component?.producer ?? "-"}</td>

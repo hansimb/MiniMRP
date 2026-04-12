@@ -124,8 +124,8 @@ export async function getPartDetail(id: string): Promise<{ item: ComponentDetail
         .from(INVENTORY_LOTS_TABLE)
         .select("id,component_id,quantity_received,quantity_remaining,unit_cost,received_at,source,notes,created_at")
         .eq("component_id", id)
-        .order("received_at", { ascending: true })
-        .order("created_at", { ascending: true })
+        .order("received_at", { ascending: false })
+        .order("created_at", { ascending: false })
     ),
     safeSelect<{ component_id: string; seller_id: string; product_url: string | null }>(
       supabase

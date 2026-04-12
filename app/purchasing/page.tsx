@@ -11,11 +11,6 @@ export default async function PurchasingPage() {
       <PageHeader
         title="Purchasing"
         description="Production-driven shortages and near-safety-stock components for purchasing decisions."
-        actions={
-          <a className="button-link subtle" href="/api/export/purchasing">
-            Export CSV
-          </a>
-        }
       />
 
       {error ? <Notice error>{error}</Notice> : null}

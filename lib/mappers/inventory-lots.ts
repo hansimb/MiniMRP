@@ -4,9 +4,13 @@ function roundCurrency(value: number) {
   return Math.round(value * 10000) / 10000;
 }
 
+function roundQuantity(value: number) {
+  return Math.round(value * 1_000_000) / 1_000_000;
+}
+
 export function calculateInventorySummaryFromLots(lots: InventoryLot[]) {
   const activeLots = lots.filter((lot) => lot.quantity_remaining > 0);
-  const quantity_available = activeLots.reduce((total, lot) => total + lot.quantity_remaining, 0);
+  const quantity_available = roundQuantity(activeLots.reduce((total, lot) => total + lot.quantity_remaining, 0));
 
   if (quantity_available <= 0) {
     return {
@@ -62,14 +66,14 @@ export function consumeInventoryLotsFifo(lots: InventoryLot[], requiredQuantity:
     }
 
     const consumed = Math.min(lot.quantity_remaining, quantityToConsume);
-    lot.quantity_remaining -= consumed;
-    quantityToConsume -= consumed;
-    inventoryConsumed += consumed;
+    lot.quantity_remaining = roundQuantity(lot.quantity_remaining - consumed);
+    quantityToConsume = roundQuantity(quantityToConsume - consumed);
+    inventoryConsumed = roundQuantity(inventoryConsumed + consumed);
   }
 
   return {
     updatedLots,
     inventoryConsumed,
-    remainingRequirement: Math.max(quantityToConsume, 0)
+    remainingRequirement: roundQuantity(Math.max(quantityToConsume, 0))
   };
 }

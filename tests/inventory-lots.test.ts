@@ -99,3 +99,43 @@ test("consumeInventoryLotsFifo reports shortage when lots do not fully cover req
   assert.equal(result.remainingRequirement, 3);
   assert.equal(result.updatedLots[0]?.quantity_remaining, 0);
 });
+
+test("consumeInventoryLotsFifo keeps decimal quantities stable for inventory lots", () => {
+  const result = consumeInventoryLotsFifo(
+    [
+      {
+        id: "lot-1",
+        component_id: "component-1",
+        quantity_received: 1.2,
+        quantity_remaining: 1.2,
+        unit_cost: 2.5,
+        received_at: "2026-04-01T10:00:00.000Z",
+        source: "import",
+        notes: null,
+        created_at: "2026-04-01T10:00:00.000Z"
+      },
+      {
+        id: "lot-2",
+        component_id: "component-1",
+        quantity_received: 0.5,
+        quantity_remaining: 0.5,
+        unit_cost: 3.1,
+        received_at: "2026-04-02T10:00:00.000Z",
+        source: "purchase",
+        notes: null,
+        created_at: "2026-04-02T10:00:00.000Z"
+      }
+    ],
+    1.3
+  );
+
+  assert.equal(result.inventoryConsumed, 1.3);
+  assert.equal(result.remainingRequirement, 0);
+  assert.deepEqual(
+    result.updatedLots.map((lot) => ({ id: lot.id, quantity_remaining: lot.quantity_remaining })),
+    [
+      { id: "lot-1", quantity_remaining: 0 },
+      { id: "lot-2", quantity_remaining: 0.4 }
+    ]
+  );
+});

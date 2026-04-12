@@ -1,4 +1,5 @@
 import * as XLSX from "xlsx";
+import { normalizeExternalUrl } from "../mappers/urls.ts";
 
 export const MASTER_DATA_REQUIRED_COLUMNS = [
   "component_sku",
@@ -14,6 +15,8 @@ export const MASTER_DATA_REQUIRED_COLUMNS = [
   "seller_lead_time_days",
   "seller_product_url"
 ] as const;
+
+export const MASTER_DATA_REQUIRED_VALUE_COLUMNS = [...MASTER_DATA_REQUIRED_COLUMNS] as const;
 
 export interface MasterDataImportRow {
   component_sku: string;
@@ -31,6 +34,7 @@ export interface MasterDataImportRow {
 }
 
 type LooseRow = Record<string, unknown>;
+type SheetRow = unknown[];
 
 export async function parseSpreadsheetFile(file: File) {
   const buffer = await file.arrayBuffer();
@@ -48,10 +52,25 @@ export function parseSpreadsheetBuffer(buffer: ArrayBuffer) {
   }
 
   const sheet = workbook.Sheets[firstSheetName];
-  return XLSX.utils.sheet_to_json<LooseRow>(sheet, {
+  const rows = XLSX.utils.sheet_to_json<SheetRow>(sheet, {
+    header: 1,
     defval: "",
     raw: false
   });
+  const headerRowIndex = rows.findIndex((row) => hasRequiredColumns(row));
+
+  if (headerRowIndex === -1) {
+    throw new Error(`Could not find a header row with required columns: ${MASTER_DATA_REQUIRED_COLUMNS.join(", ")}`);
+  }
+
+  const headers = (rows[headerRowIndex] ?? []).map((cell) => String(cell ?? "").trim());
+
+  return rows
+    .slice(headerRowIndex + 1)
+    .filter((row) => row.some((cell) => String(cell ?? "").trim().length > 0))
+    .map((row) =>
+      Object.fromEntries(headers.map((header, index) => [header, String(row[index] ?? "").trim()]))
+    );
 }
 
 export function normalizeMasterDataRows(rows: LooseRow[]): MasterDataImportRow[] {
@@ -65,36 +84,79 @@ export function normalizeMasterDataRows(rows: LooseRow[]): MasterDataImportRow[]
     throw new Error(`Missing required columns: ${missingColumns.join(", ")}`);
   }
 
-  return rows.map((row, index) => ({
-    component_sku: readText(row, "component_sku", index),
-    component_name: readText(row, "component_name", index),
-    component_category: readText(row, "component_category", index),
-    component_producer: readText(row, "component_producer", index),
-    component_value: readText(row, "component_value", index),
-    component_safety_stock: readNumber(row, "component_safety_stock", index),
-    inventory_quantity_available: readNumber(row, "inventory_quantity_available", index),
-    inventory_purchase_price: readNumber(row, "inventory_purchase_price", index),
-    seller_name: readText(row, "seller_name", index),
-    seller_base_url: readText(row, "seller_base_url", index),
-    seller_lead_time_days: readNumber(row, "seller_lead_time_days", index),
-    seller_product_url: readText(row, "seller_product_url", index)
-  }));
+  const normalizedRows: MasterDataImportRow[] = [];
+  const rowErrors: string[] = [];
+
+  for (const [index, row] of rows.entries()) {
+    const missingFields: string[] = [];
+    const invalidNumericFields: string[] = [];
+
+    const normalizedRow = {
+      component_sku: readRequiredText(row, "component_sku", missingFields),
+      component_name: readRequiredText(row, "component_name", missingFields),
+      component_category: readRequiredText(row, "component_category", missingFields),
+      component_producer: readRequiredText(row, "component_producer", missingFields),
+      component_value: readRequiredText(row, "component_value", missingFields),
+      component_safety_stock: readRequiredNumber(row, "component_safety_stock", missingFields, invalidNumericFields),
+      inventory_quantity_available: readRequiredNumber(row, "inventory_quantity_available", missingFields, invalidNumericFields),
+      inventory_purchase_price: readRequiredNumber(row, "inventory_purchase_price", missingFields, invalidNumericFields),
+      seller_name: readRequiredText(row, "seller_name", missingFields),
+      seller_base_url: normalizeExternalUrl(readRequiredText(row, "seller_base_url", missingFields)) ?? "",
+      seller_lead_time_days: readRequiredNumber(row, "seller_lead_time_days", missingFields, invalidNumericFields),
+      seller_product_url: normalizeExternalUrl(readRequiredText(row, "seller_product_url", missingFields)) ?? ""
+    };
+
+    if (missingFields.length > 0 || invalidNumericFields.length > 0) {
+      const messages: string[] = [];
+      if (missingFields.length > 0) {
+        messages.push(`missing required values for ${missingFields.join(", ")}`);
+      }
+      if (invalidNumericFields.length > 0) {
+        messages.push(`invalid numeric values for ${invalidNumericFields.join(", ")}`);
+      }
+      rowErrors.push(`Import row ${index + 1}: ${messages.join("; ")}`);
+      continue;
+    }
+
+    normalizedRows.push(normalizedRow);
+  }
+
+  if (rowErrors.length > 0) {
+    throw new Error(rowErrors.join(" "));
+  }
+
+  return normalizedRows;
 }
 
-function readText(row: LooseRow, key: string, index: number) {
+function hasRequiredColumns(row: SheetRow) {
+  const columns = new Set(row.map((cell) => String(cell ?? "").trim()));
+  return MASTER_DATA_REQUIRED_COLUMNS.every((column) => columns.has(column));
+}
+
+function readRequiredText(row: LooseRow, key: string, missingFields: string[]) {
   const value = String(row[key] ?? "").trim();
   if (!value) {
-    throw new Error(`Row ${index + 1}: missing value for ${key}`);
+    missingFields.push(key);
   }
   return value;
 }
 
-function readNumber(row: LooseRow, key: string, index: number) {
+function readRequiredNumber(
+  row: LooseRow,
+  key: string,
+  missingFields: string[],
+  invalidNumericFields: string[]
+) {
   const raw = String(row[key] ?? "").trim();
-  const value = Number(raw);
+  if (!raw) {
+    missingFields.push(key);
+    return 0;
+  }
 
-  if (!raw || Number.isNaN(value)) {
-    throw new Error(`Invalid numeric value for ${key} on row ${index + 1}`);
+  const value = Number(raw);
+  if (Number.isNaN(value)) {
+    invalidNumericFields.push(key);
+    return 0;
   }
 
   return value;

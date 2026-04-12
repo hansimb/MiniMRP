@@ -45,6 +45,7 @@ export default async function VersionDetailPage(props: {
       <VersionMrpPanel
         versionId={params.id}
         requestedQuantity={requestedQuantity}
+        hasCalculated={Boolean(searchParams.quantity)}
         rows={mrpRows}
         summary={mrpSummary}
       />

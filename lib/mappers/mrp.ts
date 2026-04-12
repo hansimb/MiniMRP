@@ -220,9 +220,8 @@ export function buildProductionShortageMetrics(input: {
   availableInventory: number;
   safetyStock: number;
 }) {
-  const currentNetNeed = Math.max(input.totalNetRequirement, 0);
-  const recommendedOrderQuantity =
-    currentNetNeed > 0 ? Math.max(currentNetNeed - input.availableInventory, 0) + input.safetyStock : 0;
+  const currentNetNeed = Math.max(input.totalNetRequirement - input.availableInventory, 0);
+  const recommendedOrderQuantity = currentNetNeed > 0 ? currentNetNeed + input.safetyStock : 0;
 
   return {
     netNeed: currentNetNeed,

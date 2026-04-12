@@ -38,7 +38,7 @@ export function InventoryLotActions(props: {
               className="input"
               type="number"
               min="0.0001"
-              step="1"
+              step="0.0001"
               name="quantity_received"
               defaultValue={props.lot.quantity_received}
             />
@@ -50,7 +50,7 @@ export function InventoryLotActions(props: {
               className="input"
               type="number"
               min="0"
-              step="1"
+              step="0.0001"
               name="quantity_remaining"
               defaultValue={props.lot.quantity_remaining}
             />

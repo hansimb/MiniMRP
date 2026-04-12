@@ -1,3 +1,6 @@
+"use client";
+
+import { useMemo, useState } from "react";
 import type { MrpRow } from "@/lib/mappers/mrp";
 import { addProductionEntryAction } from "@/lib/supabase/actions/index";
 import { EmptyState, ModalTrigger, Panel } from "@/shared/ui";
@@ -5,6 +8,7 @@ import { EmptyState, ModalTrigger, Panel } from "@/shared/ui";
 export function VersionMrpPanel(props: {
   versionId: string;
   requestedQuantity: number;
+  hasCalculated: boolean;
   rows: MrpRow[];
   summary: {
     quantityPerProduct: number;
@@ -18,6 +22,18 @@ export function VersionMrpPanel(props: {
     netCost: number;
   };
 }) {
+  const [draftQuantity, setDraftQuantity] = useState(String(props.requestedQuantity));
+
+  const pendingQuantity = useMemo(() => {
+    const parsed = Number(draftQuantity);
+    if (!Number.isFinite(parsed) || parsed < 1) {
+      return 1;
+    }
+    return Math.floor(parsed);
+  }, [draftQuantity]);
+
+  const requiresCalculation = !props.hasCalculated || pendingQuantity !== props.requestedQuantity;
+
   return (
     <Panel
       title="MRP result"
@@ -34,25 +50,37 @@ export function VersionMrpPanel(props: {
                 min="1"
                 step="1"
                 name="quantity"
-                defaultValue={props.requestedQuantity}
+                value={draftQuantity}
+                onChange={(event) => setDraftQuantity(event.target.value)}
               />
             </label>
             <button className="button primary" type="submit">
               Calculate MRP
             </button>
           </form>
-          <ModalTrigger buttonLabel="Add to production" buttonClassName="button primary" title="Add to production?">
-            <form action={addProductionEntryAction} className="stack">
-              <input type="hidden" name="version_id" value={props.versionId} />
-              <input type="hidden" name="quantity" value={props.requestedQuantity} />
-              <div className="notice">
-                This will add the current version to the production queue with build quantity {props.requestedQuantity}, consume available inventory by gross requirement, and leave any missing quantity in purchasing as net need.
+          {requiresCalculation ? (
+            <ModalTrigger buttonLabel="Add to production" buttonClassName="button primary" title="Calculate MRP first">
+              <div className="stack">
+                <div className="notice">
+                  Press Calculate MRP for quantity {pendingQuantity} and review the table before adding this version to production.
+                </div>
+                <div className="small muted">After recalculating the table, reopen this dialog to continue.</div>
               </div>
-              <button className="button primary" type="submit">
-                Confirm add to production
-              </button>
-            </form>
-          </ModalTrigger>
+            </ModalTrigger>
+          ) : (
+            <ModalTrigger buttonLabel="Add to production" buttonClassName="button primary" title="Add to production?">
+              <form action={addProductionEntryAction} className="stack">
+                <input type="hidden" name="version_id" value={props.versionId} />
+                <input type="hidden" name="quantity" value={props.requestedQuantity} />
+                <div className="notice">
+                  This will add the current version to the production queue with build quantity {props.requestedQuantity}, consume available inventory by gross requirement, and leave any missing quantity in purchasing as net need.
+                </div>
+                <button className="button primary" type="submit">
+                  Confirm add to production
+                </button>
+              </form>
+            </ModalTrigger>
+          )}
         </div>
       }
     >
@@ -106,12 +134,7 @@ export function VersionMrpPanel(props: {
                 </tr>
               ))}
               <tr>
-                <td><strong>Total</strong></td>
-                <td></td>
-                <td></td>
-                <td></td>
-                <td></td>
-                <td></td>
+                <td colSpan={5}><strong>Total</strong></td>
                 <td>{props.summary.grossRequirement}</td>
                 <td>{props.summary.netRequirement}</td>
                 <td></td>

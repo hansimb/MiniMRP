@@ -43,7 +43,7 @@ export function VersionHeaderActions(props: {
       <a className="button-link subtle" href={`/api/export/bom/${versionId}`}>
         Export BOM
       </a>
-      <ModalTrigger buttonLabel="Import CSV" title="Import BOM from CSV or Excel">
+      <ModalTrigger buttonLabel="Import BOM" title="Import BOM from CSV or Excel">
         <ImportPreview
           plain
           title="Import BOM from CSV or Excel"

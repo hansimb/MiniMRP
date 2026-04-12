@@ -7,11 +7,13 @@ import { createSupabaseClient } from "../client";
 import { syncInventorySummaryForComponent } from "./inventory-summary";
 import { recordHistory, optionalValue, redirect, revalidatePath, requiredValue, stringifyHistoryValue } from "./shared";
 
+const QUANTITY_EPSILON = 0.000001;
+
 export async function addInventoryAction(formData: FormData) {
   const supabase = await createSupabaseClient();
   const componentId = requiredValue(formData.get("component_id"), "Component id");
-  const quantity = Number(requiredValue(formData.get("quantity_received"), "Quantity"));
-  const purchasePrice = Number(requiredValue(formData.get("unit_cost"), "Unit cost"));
+  const quantity = parsePositiveNumber(formData.get("quantity_received"), "Quantity");
+  const purchasePrice = parseNonNegativeNumber(formData.get("unit_cost"), "Unit cost");
   const receivedAt = optionalValue(formData.get("received_at")) ?? new Date().toISOString();
   const source = optionalValue(formData.get("source"));
   const notes = optionalValue(formData.get("notes"));
@@ -58,13 +60,13 @@ export async function adjustInventoryDeltaAction(formData: FormData) {
   const supabase = await createSupabaseClient();
   const componentId = requiredValue(formData.get("component_id"), "Component id");
   const mode = requiredValue(formData.get("mode"), "Mode") as "add" | "remove";
-  const amount = Number(requiredValue(formData.get("amount"), "Amount"));
+  const amount = parsePositiveNumber(formData.get("amount"), "Amount");
   const source = optionalValue(formData.get("source"));
   const notes = optionalValue(formData.get("notes"));
   const returnTo = optionalValue(formData.get("returnTo")) ?? "/inventory";
 
   if (mode === "add") {
-    const unitCost = Number(requiredValue(formData.get("unit_cost"), "Unit cost"));
+    const unitCost = parseNonNegativeNumber(formData.get("unit_cost"), "Unit cost");
     const receivedAt = optionalValue(formData.get("received_at")) ?? new Date().toISOString();
     const insertResult = await supabase.from(INVENTORY_LOTS_TABLE).insert({
       component_id: componentId,
@@ -157,24 +159,16 @@ export async function updateInventoryLotAction(formData: FormData) {
   const supabase = await createSupabaseClient();
   const id = requiredValue(formData.get("id"), "Inventory lot id");
   const componentId = requiredValue(formData.get("component_id"), "Component id");
-  const quantityReceived = Number(requiredValue(formData.get("quantity_received"), "Quantity received"));
-  const quantityRemaining = Number(requiredValue(formData.get("quantity_remaining"), "Quantity remaining"));
-  const unitCost = Number(requiredValue(formData.get("unit_cost"), "Unit cost"));
+  const quantityReceived = parsePositiveNumber(formData.get("quantity_received"), "Quantity received");
+  const quantityRemaining = parseNonNegativeNumber(formData.get("quantity_remaining"), "Quantity remaining");
+  const unitCost = parseNonNegativeNumber(formData.get("unit_cost"), "Unit cost");
   const receivedAt = requiredValue(formData.get("received_at"), "Received at");
   const source = optionalValue(formData.get("source"));
   const notes = optionalValue(formData.get("notes"));
   const returnTo = optionalValue(formData.get("returnTo")) ?? `/components/${componentId}`;
 
-  if (quantityReceived <= 0) {
-    throw new Error("Quantity received must be greater than zero.");
-  }
-
-  if (quantityRemaining < 0 || quantityRemaining > quantityReceived) {
+  if (quantityRemaining < 0 || quantityRemaining - quantityReceived > QUANTITY_EPSILON) {
     throw new Error("Quantity remaining must be between zero and quantity received.");
-  }
-
-  if (unitCost < 0) {
-    throw new Error("Unit cost cannot be negative.");
   }
 
   const previous = await supabase
@@ -228,6 +222,29 @@ export async function updateInventoryLotAction(formData: FormData) {
   revalidatePath("/purchasing");
   revalidatePath(`/components/${componentId}`);
   redirect(returnTo);
+}
+
+function parseNonNegativeNumber(value: FormDataEntryValue | null, field: string) {
+  const raw = requiredValue(value, field);
+  const parsed = Number(raw);
+
+  if (!Number.isFinite(parsed)) {
+    throw new Error(`${field} must be a valid number.`);
+  }
+
+  if (parsed < 0) {
+    throw new Error(`${field} cannot be negative.`);
+  }
+
+  return parsed;
+}
+
+function parsePositiveNumber(value: FormDataEntryValue | null, field: string) {
+  const parsed = parseNonNegativeNumber(value, field);
+  if (parsed <= 0) {
+    throw new Error(`${field} must be greater than zero.`);
+  }
+  return parsed;
 }
 
 export async function deleteInventoryLotAction(formData: FormData) {

@@ -1,5 +1,6 @@
 "use server";
 
+import { normalizeExternalUrl } from "@/lib/mappers/urls";
 import { createSupabaseAdminClient } from "../admin-client";
 import { APP_SETTINGS_TABLE, PRIVATE_SCHEMA } from "../table-names";
 import { recordHistory, optionalValue, redirect, revalidatePath, requiredValue, slugify, stringifyHistoryValue } from "./shared";
@@ -89,9 +90,9 @@ export async function createPartAction(formData: FormData) {
     throw new Error(insertResult.error?.message ?? "Could not create component.");
   }
 
-  const baseUrl = optionalValue(formData.get("base_url"));
+  const baseUrl = normalizeExternalUrl(optionalValue(formData.get("base_url")));
   const sellerName = optionalValue(formData.get("seller_name"));
-  const updateLink = optionalValue(formData.get("update_link"));
+  const updateLink = normalizeExternalUrl(optionalValue(formData.get("update_link")));
   if (sellerName) {
     let sellerId: string | null = null;
     const sellerResult = await supabase
@@ -191,9 +192,9 @@ export async function upsertPartSellerLinkAction(formData: FormData) {
   const supabase = createSupabaseAdminClient();
   const componentId = requiredValue(formData.get("component_id"), "Component id");
   const sellerId = requiredValue(formData.get("seller_id"), "Seller id");
-  const baseUrl = optionalValue(formData.get("base_url"));
+  const baseUrl = normalizeExternalUrl(optionalValue(formData.get("base_url")));
   const leadTime = optionalValue(formData.get("lead_time"));
-  const explicitUrl = optionalValue(formData.get("product_url"));
+  const explicitUrl = normalizeExternalUrl(optionalValue(formData.get("product_url")));
   const componentName = requiredValue(formData.get("component_name"), "Component name");
 
   const sellerUpdate = await supabase
@@ -240,9 +241,9 @@ export async function createSellerForPartAction(formData: FormData) {
   const componentId = requiredValue(formData.get("component_id"), "Component id");
   const componentName = requiredValue(formData.get("component_name"), "Component name");
   const sellerName = requiredValue(formData.get("seller_name"), "Seller name");
-  const baseUrl = optionalValue(formData.get("base_url"));
+  const baseUrl = normalizeExternalUrl(optionalValue(formData.get("base_url")));
   const leadTime = optionalValue(formData.get("lead_time"));
-  const explicitUrl = optionalValue(formData.get("product_url"));
+  const explicitUrl = normalizeExternalUrl(optionalValue(formData.get("product_url")));
 
   const sellerResult = await supabase
     .from("sellers")
