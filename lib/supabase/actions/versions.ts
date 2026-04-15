@@ -2,6 +2,7 @@
 
 import { buildVersionBomReferenceRows, normalizeVersionBomRows, parseVersionBomFile } from "@/lib/import/version-bom";
 import { normalizeReferencesInput } from "@/lib/mappers/bom";
+import { VERSION_ATTACHMENT_MAX_BYTES, validateUploadedFile } from "@/lib/uploads/validation";
 import { createSupabaseAdminClient } from "../admin-client";
 import { deleteStoredFileIfPresent, uploadStoredFile, VERSION_ATTACHMENTS_BUCKET } from "../storage";
 import { ATTACHMENTS_TABLE, COMPONENT_REFERENCES_TABLE, PRIVATE_SCHEMA, PRODUCT_VERSIONS_TABLE } from "../table-names";
@@ -249,8 +250,18 @@ export async function uploadVersionAttachmentAction(formData: FormData) {
   const supabase = createSupabaseAdminClient();
   const versionId = requiredValue(formData.get("version_id"), "Version id");
   const file = formData.get("file");
+  const uploadFile = file instanceof File ? file : null;
+  const validationError = validateUploadedFile({
+    file: uploadFile,
+    label: "Attachment",
+    maxBytes: VERSION_ATTACHMENT_MAX_BYTES
+  });
 
-  if (!(file instanceof File) || file.size === 0) {
+  if (validationError) {
+    redirectVersionError(versionId, "attachmentError", validationError);
+  }
+
+  if (!uploadFile) {
     redirectVersionError(versionId, "attachmentError", "Attachment file is required.");
   }
 
@@ -262,7 +273,7 @@ export async function uploadVersionAttachmentAction(formData: FormData) {
       bucket: VERSION_ATTACHMENTS_BUCKET,
       scope: "versions",
       entityId: versionId,
-      file
+      file: uploadFile
     });
 
     const insertResult = await supabase.schema(PRIVATE_SCHEMA).from(ATTACHMENTS_TABLE).insert({
@@ -278,7 +289,7 @@ export async function uploadVersionAttachmentAction(formData: FormData) {
       entity_type: "attachment",
       entity_id: versionId,
       action_type: "upload",
-      summary: `Uploaded attachment ${file.name} for version ${versionId}`,
+      summary: `Uploaded attachment ${uploadFile.name} for version ${versionId}`,
       new_value: stringifyHistoryValue({ version_id: versionId, file_path: storedPath })
     });
   } catch (error) {

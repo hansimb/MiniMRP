@@ -1,5 +1,6 @@
 "use server";
 
+import { PRODUCT_IMAGE_MAX_BYTES, validateUploadedFile } from "@/lib/uploads/validation";
 import { createSupabaseAdminClient } from "../admin-client";
 import { createSupabaseClient } from "../client";
 import { deleteStoredFileIfPresent, PRODUCT_IMAGES_BUCKET, uploadStoredFile } from "../storage";
@@ -98,8 +99,19 @@ export async function uploadProductImageAction(formData: FormData) {
   const supabase = createSupabaseAdminClient();
   const id = requiredValue(formData.get("id"), "Product id");
   const file = formData.get("file");
+  const uploadFile = file instanceof File ? file : null;
+  const validationError = validateUploadedFile({
+    file: uploadFile,
+    label: "Product image",
+    maxBytes: PRODUCT_IMAGE_MAX_BYTES,
+    mustBeImage: true
+  });
 
-  if (!(file instanceof File) || file.size === 0) {
+  if (validationError) {
+    redirectProductImageError(id, validationError);
+  }
+
+  if (!uploadFile) {
     redirectProductImageError(id, "Product image file is required.");
   }
 
@@ -116,7 +128,7 @@ export async function uploadProductImageAction(formData: FormData) {
       bucket: PRODUCT_IMAGES_BUCKET,
       scope: "products",
       entityId: id,
-      file
+      file: uploadFile
     });
 
     await deleteStoredFileIfPresent({

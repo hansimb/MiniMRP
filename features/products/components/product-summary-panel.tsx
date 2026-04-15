@@ -1,8 +1,9 @@
 /* eslint-disable @next/next/no-img-element */
-import { removeProductImageAction, uploadProductImageAction } from "@/lib/supabase/actions";
+import { removeProductImageAction } from "@/lib/supabase/actions";
 import { Panel } from "@/shared/ui";
 import type { ProductDetail } from "@/lib/types/domain";
 import { ModalTrigger, Notice } from "@/shared/ui";
+import { ProductImageUploadForm } from "./product-image-upload-form";
 
 export function ProductSummaryPanel(props: {
   product: ProductDetail | null;
@@ -21,23 +22,7 @@ export function ProductSummaryPanel(props: {
             buttonClassName="button primary"
             title={`Update image for ${product.name}`}
           >
-            <form action={uploadProductImageAction} className="stack">
-              <input type="hidden" name="id" value={product.id} />
-              <div className="field-group">
-                <label htmlFor={`product-image-file-${product.id}`}>Product image</label>
-                <input
-                  id={`product-image-file-${product.id}`}
-                  className="input"
-                  type="file"
-                  name="file"
-                  accept="image/*"
-                  required
-                />
-              </div>
-              <button className="button primary" type="submit">
-                Save image
-              </button>
-            </form>
+            <ProductImageUploadForm productId={product.id} />
           </ModalTrigger>
         ) : null
       }

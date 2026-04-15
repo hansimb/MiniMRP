@@ -1,6 +1,7 @@
-import { deleteVersionAttachmentAction, uploadVersionAttachmentAction } from "@/lib/supabase/actions";
+import { deleteVersionAttachmentAction } from "@/lib/supabase/actions";
 import type { VersionDetail } from "@/lib/types/domain";
 import { EmptyState, Notice, Panel } from "@/shared/ui";
+import { VersionAttachmentUploadForm } from "./version-attachment-upload-form";
 
 export function VersionAttachmentsPanel(props: {
   version: VersionDetail | null;
@@ -11,24 +12,7 @@ export function VersionAttachmentsPanel(props: {
       title="Attachments"
       description="Upload files for this version. Images show previews and other files open in a new tab."
     >
-      {props.version ? (
-        <form action={uploadVersionAttachmentAction} className="stack">
-          <input type="hidden" name="version_id" value={props.version.id} />
-          <div className="field-group">
-            <label htmlFor={`version-attachment-file-${props.version.id}`}>Attachment file</label>
-            <input
-              id={`version-attachment-file-${props.version.id}`}
-              className="input"
-              type="file"
-              name="file"
-              required
-            />
-          </div>
-          <button className="button primary" type="submit">
-            Upload attachment
-          </button>
-        </form>
-      ) : null}
+      {props.version ? <VersionAttachmentUploadForm versionId={props.version.id} /> : null}
 
       {props.initialError ? <Notice error>{props.initialError}</Notice> : null}
 
