@@ -4,6 +4,7 @@ import * as XLSX from "xlsx";
 import {
   VERSION_BOM_REQUIRED_FIELDS,
   buildVersionBomReferenceRows,
+  findUnknownVersionBomSkus,
   normalizeVersionBomRows,
   parseVersionBomBuffer
 } from "../lib/import/version-bom.ts";
@@ -81,5 +82,20 @@ test("buildVersionBomReferenceRows rejects unknown SKUs", () => {
         components: [{ id: "cmp-1", sku: "CAP-100N" }]
       }),
     /Unknown SKU in BOM import: RES-10K/i
+  );
+});
+
+test("findUnknownVersionBomSkus returns a unique sorted list of missing SKUs", () => {
+  assert.deepEqual(
+    findUnknownVersionBomSkus(
+      [
+        { sku: "RES-10K", reference: "R1" },
+        { sku: "cap-100n", reference: "C1" },
+        { sku: "RES-10K", reference: "R2" },
+        { sku: "IC-555", reference: "U1" }
+      ],
+      [{ sku: "CAP-100N" }]
+    ),
+    ["IC-555", "RES-10K"]
   );
 });

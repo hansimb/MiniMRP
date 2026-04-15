@@ -1,5 +1,5 @@
 import { deleteVersionAction, updateVersionAction } from "@/lib/supabase/actions/index";
-import type { VersionDetail } from "@/lib/types/domain";
+import type { ComponentListItem, VersionDetail } from "@/lib/types/domain";
 import { BackLink, ModalTrigger } from "@/shared/ui";
 import { VersionBomImportForm } from "./version-bom-import-form";
 
@@ -7,8 +7,9 @@ export function VersionHeaderActions(props: {
   version: VersionDetail | null;
   versionId: string;
   bomImportError?: string | null;
+  allParts: ComponentListItem[];
 }) {
-  const { version, versionId } = props;
+  const { version, versionId, allParts } = props;
 
   return (
     <>
@@ -45,7 +46,11 @@ export function VersionHeaderActions(props: {
         Export BOM
       </a>
       <ModalTrigger buttonLabel="Import BOM" title="Import BOM from CSV or Excel">
-        <VersionBomImportForm versionId={versionId} initialError={props.bomImportError} />
+        <VersionBomImportForm
+          versionId={versionId}
+          initialError={props.bomImportError}
+          knownSkus={allParts.map((part) => part.sku)}
+        />
       </ModalTrigger>
     </>
   );

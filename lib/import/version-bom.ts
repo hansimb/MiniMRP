@@ -93,9 +93,7 @@ export function buildVersionBomReferenceRows(args: {
   rows: VersionBomImportRow[];
   components: Array<{ id: string; sku: string }>;
 }) {
-  const componentIdBySku = new Map(
-    args.components.map((component) => [component.sku.trim().toUpperCase(), component.id])
-  );
+  const componentIdBySku = buildComponentIdBySku(args.components);
 
   return args.rows.map((row) => {
     const componentId = componentIdBySku.get(row.sku.trim().toUpperCase());
@@ -109,6 +107,21 @@ export function buildVersionBomReferenceRows(args: {
       reference: row.reference
     };
   });
+}
+
+export function findUnknownVersionBomSkus(
+  rows: VersionBomImportRow[],
+  components: Array<{ sku: string }>
+) {
+  const knownSkus = new Set(components.map((component) => component.sku.trim().toUpperCase()));
+
+  return Array.from(
+    new Set(
+      rows
+        .map((row) => row.sku.trim())
+        .filter((sku) => !knownSkus.has(sku.toUpperCase()))
+    )
+  ).sort((left, right) => left.localeCompare(right));
 }
 
 function hasLogicalHeaders(row: SheetRow) {
@@ -125,4 +138,8 @@ function readLogicalValue(row: LooseRow, acceptedHeaders: Set<string>) {
   }
 
   return "";
+}
+
+function buildComponentIdBySku(components: Array<{ id: string; sku: string }>) {
+  return new Map(components.map((component) => [component.sku.trim().toUpperCase(), component.id]));
 }

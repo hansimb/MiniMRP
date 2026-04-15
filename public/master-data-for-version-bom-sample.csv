@@ -1,0 +1,6 @@
+component_sku,component_name,component_category,component_producer,component_value,component_safety_stock,inventory_quantity_available,inventory_purchase_price,seller_name,seller_base_url,seller_lead_time_days,seller_product_url
+RES-10K,Resistor 10k 0603,Resistor,Yageo,10k,200,5000,0.004,Northbridge Parts,https://northbridge.parts,5,https://northbridge.parts/res-10k-0603
+RES-10K,Resistor 10k 0603,Resistor,Yageo,10k,200,5000,0.004,Copper Harbor Supply,https://copperharbor.example,7,https://copperharbor.example/res-10k-0603
+CAP-100N,Ceramic Capacitor 100nF 0603,Capacitor,Murata,100nF,150,3200,0.006,Northbridge Parts,https://northbridge.parts,5,https://northbridge.parts/cap-100n-0603
+IC-555,Timer IC 555,Integrated Circuit,Texas Instruments,NE555,40,120,0.48,Atlas Junction,https://atlasjunction.example,6,https://atlasjunction.example/ic-555
+LED-GREEN,Green LED 0603,Indicator,Kingbright,Green,80,900,0.03,Delta Crate Electronics,https://delta-crate.example,8,https://delta-crate.example/led-green-0603

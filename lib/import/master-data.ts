@@ -1,5 +1,4 @@
 import * as XLSX from "xlsx";
-import { normalizeExternalUrl } from "../mappers/urls.ts";
 
 export const MASTER_DATA_REQUIRED_COLUMNS = [
   "component_sku",
@@ -101,9 +100,9 @@ export function normalizeMasterDataRows(rows: LooseRow[]): MasterDataImportRow[]
       inventory_quantity_available: readRequiredNumber(row, "inventory_quantity_available", missingFields, invalidNumericFields),
       inventory_purchase_price: readRequiredNumber(row, "inventory_purchase_price", missingFields, invalidNumericFields),
       seller_name: readRequiredText(row, "seller_name", missingFields),
-      seller_base_url: normalizeExternalUrl(readRequiredText(row, "seller_base_url", missingFields)) ?? "",
+      seller_base_url: normalizeImportedUrl(readRequiredText(row, "seller_base_url", missingFields)) ?? "",
       seller_lead_time_days: readRequiredNumber(row, "seller_lead_time_days", missingFields, invalidNumericFields),
-      seller_product_url: normalizeExternalUrl(readRequiredText(row, "seller_product_url", missingFields)) ?? ""
+      seller_product_url: normalizeImportedUrl(readRequiredText(row, "seller_product_url", missingFields)) ?? ""
     };
 
     if (missingFields.length > 0 || invalidNumericFields.length > 0) {
@@ -139,6 +138,23 @@ function readRequiredText(row: LooseRow, key: string, missingFields: string[]) {
     missingFields.push(key);
   }
   return value;
+}
+
+function normalizeImportedUrl(value: string | null | undefined) {
+  const text = String(value ?? "").trim();
+  if (!text) {
+    return null;
+  }
+
+  if (text.startsWith("//")) {
+    return `https:${text}`;
+  }
+
+  if (/^[a-z][a-z\d+.-]*:/i.test(text)) {
+    return text;
+  }
+
+  return `https://${text.replace(/^\/+/, "")}`;
 }
 
 function readRequiredNumber(

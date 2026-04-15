@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { importVersionBomAction } from "@/lib/supabase/actions";
 import {
+  findUnknownVersionBomSkus,
   normalizeVersionBomRows,
   parseVersionBomFile,
   VERSION_BOM_REQUIRED_FIELDS
@@ -12,6 +13,7 @@ import { Notice } from "@/shared/ui";
 export function VersionBomImportForm(props: {
   versionId: string;
   initialError?: string | null;
+  knownSkus: string[];
 }) {
   const [rows, setRows] = useState<Array<{ sku: string; reference: string }>>([]);
   const [error, setError] = useState<string | null>(null);
@@ -19,6 +21,7 @@ export function VersionBomImportForm(props: {
   const [fileName, setFileName] = useState<string | null>(null);
   const [rowCount, setRowCount] = useState(0);
   const [uniqueSkuCount, setUniqueSkuCount] = useState(0);
+  const [unknownSkus, setUnknownSkus] = useState<string[]>([]);
 
   async function onFileChange(event: React.ChangeEvent<HTMLInputElement>) {
     const file = event.target.files?.[0];
@@ -27,6 +30,7 @@ export function VersionBomImportForm(props: {
       setFileName(null);
       setRowCount(0);
       setUniqueSkuCount(0);
+      setUnknownSkus([]);
       setError(null);
       setServerError(null);
       return;
@@ -37,14 +41,20 @@ export function VersionBomImportForm(props: {
 
     try {
       const normalized = normalizeVersionBomRows(await parseVersionBomFile(file));
+      const missingSkus = findUnknownVersionBomSkus(
+        normalized,
+        props.knownSkus.map((sku) => ({ sku }))
+      );
       setRowCount(normalized.length);
       setUniqueSkuCount(new Set(normalized.map((row) => row.sku)).size);
+      setUnknownSkus(missingSkus);
       setRows(normalized.slice(0, 12));
       setError(null);
     } catch (reason) {
       setRows([]);
       setRowCount(0);
       setUniqueSkuCount(0);
+      setUnknownSkus([]);
       setError(reason instanceof Error ? reason.message : "Could not read the selected BOM file.");
     }
   }
@@ -52,9 +62,9 @@ export function VersionBomImportForm(props: {
   return (
     <form
       action={importVersionBomAction}
-      className="stack"
+      className="stack bom-import-form"
       onSubmit={(event) => {
-        if (error) {
+        if (error || unknownSkus.length > 0) {
           event.preventDefault();
         }
       }}
@@ -103,6 +113,11 @@ export function VersionBomImportForm(props: {
 
       {serverError ? <Notice error>{serverError}</Notice> : null}
       {error ? <Notice error>{error}</Notice> : null}
+      {unknownSkus.length > 0 ? (
+        <Notice error>
+          Unknown SKU{unknownSkus.length === 1 ? "" : "s"} in this import: {unknownSkus.join(", ")}
+        </Notice>
+      ) : null}
 
       {rows.length > 0 ? (
         <div className="table-wrap">
@@ -125,7 +140,7 @@ export function VersionBomImportForm(props: {
         </div>
       ) : null}
 
-      <button className="button primary" type="submit">
+      <button className="button primary modal-form-action" type="submit">
         Replace BOM
       </button>
     </form>

@@ -404,6 +404,10 @@ th {
   gap: 6px;
 }
 
+.bom-import-form {
+  grid-template-columns: minmax(0, 1fr);
+}
+
 .small {
   font-size: 0.88rem;
 }
@@ -442,6 +446,11 @@ th {
 
 .modal-head h4 {
   margin: 0;
+}
+
+.modal-form-action {
+  justify-self: start;
+  align-self: start;
 }
 
 .image-frame {

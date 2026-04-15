@@ -42,11 +42,13 @@ export default async function VersionDetailPage(props: {
             version={item}
             versionId={params.id}
             bomImportError={searchParams.bomImportError ?? null}
+            allParts={allParts}
           />
         }
       />
 
       {error ? <Notice error>{error}</Notice> : null}
+      {searchParams.bomImportError ? <Notice error>{searchParams.bomImportError}</Notice> : null}
 
       <div className="two-column">
         <VersionAttachmentsPanel version={item} initialError={searchParams.attachmentError ?? null} />
