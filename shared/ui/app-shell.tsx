@@ -80,7 +80,10 @@ export function AppShell({
       <main className="content">
         {children}
         {fixLoopProjectName ? (
-          <AgenticFixLoop projectName={fixLoopProjectName} />
+          <AgenticFixLoop
+            projectName={fixLoopProjectName}
+            position="bottom-left"
+          />
         ) : null}
       </main>
     </div>
