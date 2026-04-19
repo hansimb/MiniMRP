@@ -9,9 +9,11 @@
     "start": "next start",
     "lint": "next lint",
     "typecheck": "tsc --noEmit",
-    "test": "node --experimental-strip-types --test --test-isolation=none tests/*.test.ts"
+    "test": "node --experimental-strip-types --test --test-isolation=none tests/*.test.ts",
+    "fixloop:pull": "node --env-file=.env.development ../agentic-fix-loop/packages/cli/dist/index.js pull"
   },
   "dependencies": {
+    "@agentic-fix-loop/widget": "file:../agentic-fix-loop/packages/widget",
     "@supabase/ssr": "^0.10.2",
     "@supabase/supabase-js": "^2.101.1",
     "next": "^15.5.4",

@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import type { ReactNode } from "react";
 import "./globals.css";
+import { getFixLoopBrowserEnv, hasFixLoopBrowserEnv } from "@/lib/fixloop/env";
 import { AppShell } from "@/shared/ui";
 
 export const metadata: Metadata = {
@@ -9,10 +10,15 @@ export const metadata: Metadata = {
 };
 
 export default function RootLayout({ children }: { children: ReactNode }) {
+  const fixLoopEnv = getFixLoopBrowserEnv();
+  const fixLoopProjectName = hasFixLoopBrowserEnv()
+    ? fixLoopEnv.projectName
+    : undefined;
+
   return (
     <html lang="en">
       <body>
-        <AppShell>{children}</AppShell>
+        <AppShell fixLoopProjectName={fixLoopProjectName}>{children}</AppShell>
       </body>
     </html>
   );
