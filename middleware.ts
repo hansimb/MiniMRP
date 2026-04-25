@@ -2,50 +2,20 @@ import { NextResponse, type NextRequest } from "next/server";
 import { createServerClient } from "@supabase/ssr";
 import { FORBIDDEN_PATH, resolveAdminAccessFailure } from "@/lib/auth/admin-access";
 import { isUserAdmin } from "@/lib/auth/admin-state";
-import { getProtectedRedirectPath, getPostLoginRedirectPath, isPublicAuthPath } from "@/lib/auth/redirects";
-import { getRuntimeMode } from "@/lib/runtime";
 import {
-  DESKTOP_SESSION_COOKIE_NAME,
-  getDesktopAdminFlagsFromCookieValue
-} from "@/lib/runtime/sqlite/auth";
+  getProtectedRedirectPath,
+  getPostLoginRedirectPath,
+  isPublicAuthPath
+} from "@/lib/auth/redirects";
+import { getRuntimeMode } from "@/lib/runtime";
 
 export async function middleware(request: NextRequest) {
   if (getRuntimeMode() === "sqlite") {
     const { pathname, searchParams } = request.nextUrl;
     const isLoginPath = isPublicAuthPath(pathname);
-    const isPublicPath = isLoginPath || pathname === FORBIDDEN_PATH;
-    const desktopFlags = getDesktopAdminFlagsFromCookieValue(
-      request.cookies.get(DESKTOP_SESSION_COOKIE_NAME)?.value
-    );
-
-    if (!desktopFlags.isAuthenticated && !isPublicPath) {
-      if (pathname.startsWith("/api/")) {
-        return NextResponse.json({ error: "Authentication required." }, { status: 401 });
-      }
-
-      return NextResponse.redirect(new URL(getProtectedRedirectPath(pathname), request.url));
-    }
-
-    if (desktopFlags.isAuthenticated && isLoginPath) {
+    if (isLoginPath) {
       const nextPath = searchParams.get("next");
       return NextResponse.redirect(new URL(getPostLoginRedirectPath(nextPath), request.url));
-    }
-
-    if (desktopFlags.isAuthenticated && !isPublicPath) {
-      const resolution = resolveAdminAccessFailure({
-        pathname,
-        isAuthenticated: desktopFlags.isAuthenticated,
-        isAdmin: desktopFlags.isAdmin,
-        kind: pathname.startsWith("/api/") ? "api" : "page"
-      });
-
-      if (resolution.kind === "api-error") {
-        return NextResponse.json({ error: resolution.message }, { status: resolution.status });
-      }
-
-      if (resolution.kind === "redirect") {
-        return NextResponse.redirect(new URL(resolution.location, request.url));
-      }
     }
 
     return NextResponse.next({

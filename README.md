@@ -2,8 +2,6 @@
 
 MiniMRP is a small internal MRP (material requirements planning) system for small businesses specializing electronic products. It is designed to manage products, versions, BOMs, components, inventory, production entries, and purchasing needs without the overhead of a full ERP system.
 
-This current version (or branch) of the project is at a internal demo stage, while production-ready authentication, tighter security, and more complete import persistence are still planned for the next phases.
-
 ## Main Features
 
 - Product and version management
@@ -86,11 +84,34 @@ npm run dev
 ## Useful Scripts
 
 - `npm run dev`
+- `npm run dev:desktop`
 - `npm run build`
+- `npm run build:desktop`
+- `npm run dist:desktop`
 - `npm run start`
 - `npm run lint`
 - `npm run typecheck`
 - `npm test`
+
+## Desktop Executable
+
+Download the latest Windows portable test build here:
+
+- [MiniMRP Desktop test build](https://drive.google.com/file/d/1BFIWXomwp3pJmD-n93Y3mOQpdydvvUIx/view?usp=sharing)
+
+Build the Windows desktop executable with:
+
+```bash
+npm run dist:desktop
+```
+
+The generated portable `.exe` is written under [dist/desktop](./dist/desktop). The expected artifact name is `MiniMRP-Desktop-<version>.exe`.
+
+For day-to-day desktop development without packaging, use:
+
+```bash
+npm run dev:desktop
+```
 
 ## Notes
 

@@ -3,6 +3,7 @@ import type { NextConfig } from "next";
 import { SERVER_ACTION_BODY_SIZE_LIMIT } from "./lib/uploads/validation.ts";
 
 const nextConfig: NextConfig = {
+  output: "standalone",
   outputFileTracingRoot: path.join(import.meta.dirname),
   experimental: {
     serverActions: {

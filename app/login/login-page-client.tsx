@@ -17,8 +17,7 @@ export function LoginPageClient() {
         <span className="login-eyebrow">MiniMRP Internal Access</span>
         <h1>Sign in to the admin workspace</h1>
         <p>
-          Use your admin account to access products, BOM structures, inventory, purchasing, and
-          production views.
+          Use your admin account to access products, BOM structures, inventory, purchasing, and production views.
         </p>
       </section>
 

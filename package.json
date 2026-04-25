@@ -3,12 +3,15 @@
   "version": "0.1.0",
   "private": true,
   "type": "module",
+  "main": "desktop/electron/packaged-main.mjs",
   "scripts": {
     "dev": "next dev",
     "dev:desktop": "node desktop/scripts/dev.mjs",
     "build": "next build",
+    "build:desktop": "next build && node desktop/scripts/prepare-bundle.mjs",
     "start": "next start",
     "start:desktop": "node desktop/scripts/start.mjs",
+    "dist:desktop": "npm run build:desktop && electron-builder --win portable",
     "lint": "next lint",
     "typecheck": "tsc --noEmit",
     "test": "node --experimental-strip-types --test --test-isolation=none tests/*.test.ts",
@@ -32,8 +35,50 @@
     "@types/react": "^19.1.13",
     "@types/react-dom": "^19.1.9",
     "electron": "^41.3.0",
+    "electron-builder": "^26.8.1",
     "eslint": "^9.35.0",
     "eslint-config-next": "^15.5.4",
     "typescript": "^5.9.2"
+  },
+  "build": {
+    "appId": "com.minimrp.desktop",
+    "productName": "MiniMRP",
+    "directories": {
+      "output": "dist/desktop"
+    },
+    "files": [
+      "desktop/electron/packaged-main.mjs",
+      "desktop/electron/package.json"
+    ],
+    "extraResources": [
+      {
+        "from": "dist/desktop-bundle",
+        "to": "desktop-bundle",
+        "filter": [
+          "**/*"
+        ]
+      },
+      {
+        "from": "dist/desktop-bundle/node_modules",
+        "to": "desktop-bundle/node_modules",
+        "filter": [
+          "**/*"
+        ]
+      }
+    ],
+    "asar": true,
+    "win": {
+      "target": [
+        {
+          "target": "portable",
+          "arch": [
+            "x64"
+          ]
+        }
+      ]
+    },
+    "portable": {
+      "artifactName": "MiniMRP-Desktop-${version}.exe"
+    }
   }
 }
