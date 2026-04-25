@@ -3,7 +3,7 @@
 import { useState, useTransition } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { getPostLoginRedirectPath } from "@/lib/auth/redirects";
-import { createSupabaseBrowserClient } from "@/lib/supabase/browser-client";
+import { createRuntimeBrowserClient } from "@/lib/runtime/browser-client";
 
 export function LoginPageClient() {
   const router = useRouter();
@@ -33,7 +33,7 @@ export function LoginPageClient() {
           setError(null);
 
           startTransition(async () => {
-            const supabase = createSupabaseBrowserClient();
+            const supabase = await createRuntimeBrowserClient();
             const { error: signInError } = await supabase.auth.signInWithPassword({
               email,
               password
