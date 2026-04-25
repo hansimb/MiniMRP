@@ -1,13 +1,14 @@
 import { MasterDataImportPanel } from "@/features/import/master-data-import-panel";
-import { getAppSettings } from "@/lib/supabase/queries/index";
-import { updateDefaultSafetyStockAction } from "@/lib/supabase/actions/index";
+import { updateDefaultSafetyStockAction } from "@/lib/runtime/actions";
+import { getRuntimeQueries } from "@/lib/runtime";
 import { Notice, PageHeader, Panel } from "@/shared/ui";
 
 export default async function SettingsPage(props: {
   searchParams?: Promise<{ importError?: string }>;
 }) {
   const searchParams = (await props.searchParams) ?? {};
-  const { item: settings, error } = await getAppSettings();
+  const queries = await getRuntimeQueries();
+  const { item: settings, error } = await queries.getAppSettings();
 
   return (
     <div className="page">

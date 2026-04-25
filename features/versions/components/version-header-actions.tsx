@@ -1,4 +1,4 @@
-import { deleteVersionAction, updateVersionAction } from "@/lib/supabase/actions/index";
+import { deleteVersionAction, updateVersionAction } from "@/lib/runtime/actions";
 import type { ComponentListItem, VersionDetail } from "@/lib/types/domain";
 import { BackLink, ModalTrigger } from "@/shared/ui";
 import { VersionBomImportForm } from "./version-bom-import-form";

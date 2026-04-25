@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
 import { requireAdminApiAccess } from "@/lib/auth/require-admin";
 import { rowsToCsv } from "@/lib/mappers/export";
-import { getVersionDetail } from "@/lib/supabase/queries/index";
+import { getRuntimeQueries } from "@/lib/runtime";
 
 export async function GET(_: Request, context: { params: Promise<{ id: string }> }) {
   const adminResponse = await requireAdminApiAccess("/api/export/bom");
@@ -10,7 +10,8 @@ export async function GET(_: Request, context: { params: Promise<{ id: string }>
   }
 
   const params = await context.params;
-  const { item } = await getVersionDetail(params.id);
+  const queries = await getRuntimeQueries();
+  const { item } = await queries.getVersionDetail(params.id);
 
   const csv = rowsToCsv(
     (item?.components ?? []).map((row) => ({

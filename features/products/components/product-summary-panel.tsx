@@ -1,8 +1,7 @@
 /* eslint-disable @next/next/no-img-element */
-import { removeProductImageAction } from "@/lib/supabase/actions";
-import { Panel } from "@/shared/ui";
+import { removeProductImageAction } from "@/lib/runtime/actions";
 import type { ProductDetail } from "@/lib/types/domain";
-import { ModalTrigger, Notice } from "@/shared/ui";
+import { ModalTrigger, Notice, Panel } from "@/shared/ui";
 import { ProductImageUploadForm } from "./product-image-upload-form";
 
 export function ProductSummaryPanel(props: {

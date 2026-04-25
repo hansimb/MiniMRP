@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
 import { requireAdminApiAccess } from "@/lib/auth/require-admin";
 import { rowsToCsv } from "@/lib/mappers/export";
-import { getPurchasingOverview } from "@/lib/supabase/queries/index";
+import { getRuntimeQueries } from "@/lib/runtime";
 
 export async function GET() {
   const adminResponse = await requireAdminApiAccess("/api/export/purchasing");
@@ -9,7 +9,8 @@ export async function GET() {
     return adminResponse;
   }
 
-  const { shortages } = await getPurchasingOverview();
+  const queries = await getRuntimeQueries();
+  const { shortages } = await queries.getPurchasingOverview();
 
   const csv = rowsToCsv(
     shortages.map((item) => ({

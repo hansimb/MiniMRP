@@ -1,6 +1,6 @@
 import type { PurchasingItem } from "@/lib/types/domain";
 import { normalizeExternalUrl } from "@/lib/mappers/urls";
-import { updatePartSafetyStockAction, upsertPartSellerLinkAction } from "@/lib/supabase/actions/index";
+import { updatePartSafetyStockAction, upsertPartSellerLinkAction } from "@/lib/runtime/actions";
 import { EmptyState, ModalTrigger, Panel } from "@/shared/ui";
 
 export function NearSafetyPanel(props: { items: PurchasingItem[] }) {

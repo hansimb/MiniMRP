@@ -2,9 +2,27 @@ import { NextResponse, type NextRequest } from "next/server";
 import { createServerClient } from "@supabase/ssr";
 import { FORBIDDEN_PATH, resolveAdminAccessFailure } from "@/lib/auth/admin-access";
 import { isUserAdmin } from "@/lib/auth/admin-state";
-import { getProtectedRedirectPath, getPostLoginRedirectPath, isPublicAuthPath } from "@/lib/auth/redirects";
+import {
+  getProtectedRedirectPath,
+  getPostLoginRedirectPath,
+  isPublicAuthPath
+} from "@/lib/auth/redirects";
+import { getRuntimeMode } from "@/lib/runtime";
 
 export async function middleware(request: NextRequest) {
+  if (getRuntimeMode() === "sqlite") {
+    const { pathname, searchParams } = request.nextUrl;
+    const isLoginPath = isPublicAuthPath(pathname);
+    if (isLoginPath) {
+      const nextPath = searchParams.get("next");
+      return NextResponse.redirect(new URL(getPostLoginRedirectPath(nextPath), request.url));
+    }
+
+    return NextResponse.next({
+      request
+    });
+  }
+
   let response = NextResponse.next({
     request
   });

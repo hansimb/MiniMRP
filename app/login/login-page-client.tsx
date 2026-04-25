@@ -3,7 +3,7 @@
 import { useState, useTransition } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { getPostLoginRedirectPath } from "@/lib/auth/redirects";
-import { createSupabaseBrowserClient } from "@/lib/supabase/browser-client";
+import { createRuntimeBrowserClient } from "@/lib/runtime/browser-client";
 
 export function LoginPageClient() {
   const router = useRouter();
@@ -17,8 +17,7 @@ export function LoginPageClient() {
         <span className="login-eyebrow">MiniMRP Internal Access</span>
         <h1>Sign in to the admin workspace</h1>
         <p>
-          Use your admin account to access products, BOM structures, inventory, purchasing, and
-          production views.
+          Use your admin account to access products, BOM structures, inventory, purchasing, and production views.
         </p>
       </section>
 
@@ -33,7 +32,7 @@ export function LoginPageClient() {
           setError(null);
 
           startTransition(async () => {
-            const supabase = createSupabaseBrowserClient();
+            const supabase = await createRuntimeBrowserClient();
             const { error: signInError } = await supabase.auth.signInWithPassword({
               email,
               password

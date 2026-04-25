@@ -29,3 +29,14 @@ test("hasFixLoopBrowserEnv is false if the project name is missing", () => {
 
   assert.equal(hasFixLoopBrowserEnv(), false);
 });
+
+test("hasFixLoopBrowserEnv is false when ENABLE_FIXLOOP is false", () => {
+  process.env.ENABLE_FIXLOOP = "false";
+  process.env.AGENTIC_FIX_LOOP_PROJECT_NAME = "MiniMRP";
+  process.env.NEXT_PUBLIC_AGENTIC_FIX_LOOP_SUPABASE_URL =
+    "https://example.supabase.co";
+  process.env.NEXT_PUBLIC_AGENTIC_FIX_LOOP_SUPABASE_ANON_KEY =
+    "sb_publishable_test";
+
+  assert.equal(hasFixLoopBrowserEnv(), false);
+});

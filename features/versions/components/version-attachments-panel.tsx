@@ -1,4 +1,4 @@
-import { deleteVersionAttachmentAction } from "@/lib/supabase/actions";
+import { deleteVersionAttachmentAction } from "@/lib/runtime/actions";
 import type { VersionDetail } from "@/lib/types/domain";
 import { EmptyState, Notice, Panel } from "@/shared/ui";
 import { VersionAttachmentUploadForm } from "./version-attachment-upload-form";

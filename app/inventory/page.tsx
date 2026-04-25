@@ -1,17 +1,18 @@
 import { InventoryFiltersPanel } from "@/features/inventory/components/inventory-filters-panel";
 import { InventoryRowsPanel } from "@/features/inventory/components/inventory-rows-panel";
-import { getInventoryOverview, getPartCatalog } from "@/lib/supabase/queries/index";
+import { getRuntimeQueries } from "@/lib/runtime";
 import { Notice, PageHeader } from "@/shared/ui";
 
 export default async function InventoryPage(props: {
   searchParams?: Promise<{ category?: string; search?: string }>;
 }) {
   const searchParams = (await props.searchParams) ?? {};
-  const { items, error } = await getInventoryOverview({
+  const queries = await getRuntimeQueries();
+  const { items, error } = await queries.getInventoryOverview({
     category: searchParams.category,
     search: searchParams.search
   });
-  const { items: parts } = await getPartCatalog();
+  const { items: parts } = await queries.getPartCatalog();
 
   return (
     <div className="page">

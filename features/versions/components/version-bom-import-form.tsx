@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { importVersionBomAction } from "@/lib/supabase/actions";
+import { importVersionBomAction } from "@/lib/runtime/actions";
 import {
   findUnknownVersionBomSkus,
   normalizeVersionBomRows,

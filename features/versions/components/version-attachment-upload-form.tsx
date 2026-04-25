@@ -2,7 +2,7 @@
 
 import { useRef, useState } from "react";
 import type { FormEvent } from "react";
-import { uploadVersionAttachmentAction } from "@/lib/supabase/actions";
+import { uploadVersionAttachmentAction } from "@/lib/runtime/actions";
 import {
   MAX_UPLOAD_SIZE_LABEL,
   VERSION_ATTACHMENT_MAX_BYTES,

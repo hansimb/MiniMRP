@@ -1,12 +1,13 @@
 import { ProductionListPanel } from "@/features/production/components/production-list-panel";
-import { getProductionOverview } from "@/lib/supabase/queries/index";
+import { getRuntimeQueries } from "@/lib/runtime";
 import { Notice, PageHeader } from "@/shared/ui";
 
 export default async function ProductionPage(props: {
   searchParams?: Promise<{ error?: string }>;
 }) {
   const searchParams = (await props.searchParams) ?? {};
-  const { underProduction, completed, error } = await getProductionOverview();
+  const queries = await getRuntimeQueries();
+  const { underProduction, completed, error } = await queries.getProductionOverview();
   const pageError = searchParams.error;
 
   return (

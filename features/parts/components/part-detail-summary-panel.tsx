@@ -1,5 +1,5 @@
 import type { ComponentDetail } from "@/lib/types/domain";
-import { updatePartAction } from "@/lib/supabase/actions/index";
+import { updatePartAction } from "@/lib/runtime/actions";
 import { ModalTrigger, Panel } from "@/shared/ui";
 
 export function PartDetailSummaryPanel(props: { part: ComponentDetail | null }) {

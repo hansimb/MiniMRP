@@ -4,7 +4,9 @@ import { AgenticFixLoop } from "@hansimb/fix-loop-widget";
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { startTransition, type ReactNode } from "react";
-import { createSupabaseBrowserClient } from "@/lib/supabase/browser-client";
+import { createRuntimeBrowserClient } from "@/lib/runtime/browser-client";
+import { getPostLogoutRedirectPath } from "@/lib/auth/redirects";
+import { getBrowserRuntimeMode } from "@/lib/runtime/env";
 
 const navigation = [
   { href: "/products", label: "Products" },
@@ -25,6 +27,7 @@ export function AppShell({
 }) {
   const pathname = usePathname();
   const router = useRouter();
+  const runtimeMode = getBrowserRuntimeMode();
 
   if (pathname === "/login" || pathname === "/forbidden") {
     return <main className="content">{children}</main>;
@@ -45,36 +48,38 @@ export function AppShell({
               {item.label}
             </Link>
           ))}
-          <button
-            type="button"
-            className="nav-action"
-            onClick={() =>
-              startTransition(async () => {
-                const supabase = createSupabaseBrowserClient();
-                await supabase.auth.signOut();
-                router.replace("/login");
-                router.refresh();
-              })
-            }
-          >
-            <span className="nav-icon" aria-hidden="true">
-              <svg
-                viewBox="0 0 24 24"
-                width="16"
-                height="16"
-                fill="none"
-                stroke="currentColor"
-                strokeWidth="2"
-                strokeLinecap="round"
-                strokeLinejoin="round"
-              >
-                <path d="M10 17l5-5-5-5" />
-                <path d="M15 12H3" />
-                <path d="M21 21V3" />
-              </svg>
-            </span>
-            <span>Log out</span>
-          </button>
+          {runtimeMode === "supabase" ? (
+            <button
+              type="button"
+              className="nav-action"
+              onClick={() =>
+                startTransition(async () => {
+                  const supabase = await createRuntimeBrowserClient();
+                  await supabase.auth.signOut();
+                  router.replace(getPostLogoutRedirectPath());
+                  router.refresh();
+                })
+              }
+            >
+              <span className="nav-icon" aria-hidden="true">
+                <svg
+                  viewBox="0 0 24 24"
+                  width="16"
+                  height="16"
+                  fill="none"
+                  stroke="currentColor"
+                  strokeWidth="2"
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                >
+                  <path d="M10 17l5-5-5-5" />
+                  <path d="M15 12H3" />
+                  <path d="M21 21V3" />
+                </svg>
+              </span>
+              <span>Log out</span>
+            </button>
+          ) : null}
         </nav>
       </aside>
       <main className="content">

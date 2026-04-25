@@ -1,3 +1,8 @@
+function isFixLoopEnabled() {
+  const rawValue = process.env.ENABLE_FIXLOOP?.trim().toLowerCase();
+  return rawValue === "true" || rawValue === "1" || rawValue === "yes";
+}
+
 export function getFixLoopBrowserEnv() {
   const projectName =
     process.env.AGENTIC_FIX_LOOP_PROJECT_NAME ??
@@ -13,6 +18,10 @@ export function getFixLoopBrowserEnv() {
 }
 
 export function hasFixLoopBrowserEnv() {
+  if (!isFixLoopEnabled()) {
+    return false;
+  }
+
   const env = getFixLoopBrowserEnv();
 
   return Boolean(env.projectName && env.url && env.anonKey);

@@ -2,7 +2,7 @@ import { NextResponse } from "next/server";
 import { requireAdminApiAccess } from "@/lib/auth/require-admin";
 import { rowsToCsv } from "@/lib/mappers/export";
 import { buildMrpRows, summarizeMrpRows } from "@/lib/mappers/mrp";
-import { getVersionDetail } from "@/lib/supabase/queries/index";
+import { getRuntimeQueries } from "@/lib/runtime";
 
 export async function GET(request: Request, context: { params: Promise<{ id: string }> }) {
   const adminResponse = await requireAdminApiAccess("/api/export/mrp");
@@ -13,7 +13,8 @@ export async function GET(request: Request, context: { params: Promise<{ id: str
   const params = await context.params;
   const { searchParams } = new URL(request.url);
   const buildQuantity = Math.max(Number(searchParams.get("quantity") ?? "1") || 1, 1);
-  const { item } = await getVersionDetail(params.id);
+  const queries = await getRuntimeQueries();
+  const { item } = await queries.getVersionDetail(params.id);
   const rows = buildMrpRows(item?.components ?? [], buildQuantity);
   const summary = summarizeMrpRows(rows);
 

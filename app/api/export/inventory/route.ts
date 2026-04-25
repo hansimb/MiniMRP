@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
 import { requireAdminApiAccess } from "@/lib/auth/require-admin";
 import { rowsToCsv } from "@/lib/mappers/export";
-import { getInventoryOverview } from "@/lib/supabase/queries/index";
+import { getRuntimeQueries } from "@/lib/runtime";
 
 export async function GET(request: Request) {
   const adminResponse = await requireAdminApiAccess("/api/export/inventory");
@@ -10,7 +10,8 @@ export async function GET(request: Request) {
   }
 
   const { searchParams } = new URL(request.url);
-  const { items } = await getInventoryOverview({
+  const queries = await getRuntimeQueries();
+  const { items } = await queries.getInventoryOverview({
     category: searchParams.get("category") ?? undefined,
     search: searchParams.get("search") ?? undefined
   });

@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { createVersionAction } from "@/lib/supabase/actions/index";
+import { createVersionAction } from "@/lib/runtime/actions";
 import type { ProductDetail } from "@/lib/types/domain";
 import { Badge, EmptyState, ModalTrigger, Panel } from "@/shared/ui";
 

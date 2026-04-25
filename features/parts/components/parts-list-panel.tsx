@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { createPartAction } from "@/lib/supabase/actions/index";
+import { createPartAction } from "@/lib/runtime/actions";
 import type { ComponentListItem } from "@/lib/types/domain";
 import { EmptyState, ModalTrigger, Panel } from "@/shared/ui";
 

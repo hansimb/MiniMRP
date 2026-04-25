@@ -2,7 +2,7 @@ import Link from "next/link";
 import {
   cancelProductionEntryAction,
   completeProductionEntryAction
-} from "@/lib/supabase/actions/index";
+} from "@/lib/runtime/actions";
 import type { ProductionListItem } from "@/lib/types/domain";
 import { EmptyState, ModalTrigger, Panel } from "@/shared/ui";
 

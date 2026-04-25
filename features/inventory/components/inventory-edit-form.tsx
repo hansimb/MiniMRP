@@ -1,6 +1,6 @@
 "use client";
 
-import { updatePartSafetyStockAction } from "@/lib/supabase/actions/index";
+import { updatePartSafetyStockAction } from "@/lib/runtime/actions";
 
 export function InventoryEditForm(props: {
   inventoryId: string;
