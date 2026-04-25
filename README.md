@@ -60,26 +60,45 @@ This project uses a pragmatic, lightweight clean structure: UI, data access, and
 npm install
 ```
 
-2. Add your Supabase keys to `.env`.
+2. Add your Supabase keys to `.env`:
 
-3. Run the latest schema and seed in Supabase SQL Editor:
+```
+NEXT_PUBLIC_SUPABASE_URL=
+NEXT_PUBLIC_SUPABASE_PUBLISHABLE_DEFAULT_KEY=
+SUPABASE_SECRET_KEY=
 
-- [`supabase/schema.sql`](./supabase/schema.sql)
-- [`supabase/seed.sql`](./supabase/seed.sql)
+# Optional fixloop integration:
+ENABLE_FIXLOOP=false
+AGENTIC_FIX_LOOP_PROJECT_NAME=
+NEXT_PUBLIC_AGENTIC_FIX_LOOP_SUPABASE_URL=
+NEXT_PUBLIC_AGENTIC_FIX_LOOP_SUPABASE_ANON_KEY=
+AGENTIC_FIX_LOOP_SUPABASE_SERVICE_ROLE_KEY=
+```
+
+3. Run schema sqripts in supabase/production in your Supabase SQL Editor
 
 4. Start the app:
+
+web:
 
 ```bash
 npm run dev
 ```
 
-5. Open `http://localhost:3000`.
+5. Open `http://localhost:3000`
+
+windows desktop:
+
+```bash
+npm run dev:desktop
+```
+
+5. App opens on your windows desktop
 
 ## Storage Setup
 
 - Create private bucket `version-attachments`
 - Create private bucket `product-images`
-- Confirm `.env.development` includes `NEXT_PUBLIC_SUPABASE_URL` and a service-role key via `SUPABASE_SECRET_KEY` or `SUPABASE_SERVICE_ROLE_KEY`
 
 ## Useful Scripts
 
