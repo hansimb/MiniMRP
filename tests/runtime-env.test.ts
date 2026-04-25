@@ -4,14 +4,21 @@ import test from "node:test";
 import { getRuntimeMode } from "../lib/runtime/env.ts";
 
 const originalRuntimeMode = process.env.MINIMRP_RUNTIME;
+const originalPublicRuntimeMode = process.env.NEXT_PUBLIC_MINIMRP_RUNTIME;
 
 test.afterEach(() => {
   if (originalRuntimeMode === undefined) {
     delete process.env.MINIMRP_RUNTIME;
+  } else {
+    process.env.MINIMRP_RUNTIME = originalRuntimeMode;
+  }
+
+  if (originalPublicRuntimeMode === undefined) {
+    delete process.env.NEXT_PUBLIC_MINIMRP_RUNTIME;
     return;
   }
 
-  process.env.MINIMRP_RUNTIME = originalRuntimeMode;
+  process.env.NEXT_PUBLIC_MINIMRP_RUNTIME = originalPublicRuntimeMode;
 });
 
 test("getRuntimeMode defaults to supabase", () => {
@@ -28,6 +35,13 @@ test("getRuntimeMode accepts supabase", () => {
 
 test("getRuntimeMode accepts sqlite", () => {
   process.env.MINIMRP_RUNTIME = "sqlite";
+
+  assert.equal(getRuntimeMode(), "sqlite");
+});
+
+test("getRuntimeMode accepts the public runtime env fallback", () => {
+  delete process.env.MINIMRP_RUNTIME;
+  process.env.NEXT_PUBLIC_MINIMRP_RUNTIME = "sqlite";
 
   assert.equal(getRuntimeMode(), "sqlite");
 });

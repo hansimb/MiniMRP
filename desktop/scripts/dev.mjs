@@ -1,43 +1,20 @@
-import { spawn } from "node:child_process";
 import process from "node:process";
-import { setTimeout as delay } from "node:timers/promises";
+import { findAvailablePort, spawnProcess, waitForServer } from "./runtime-helpers.mjs";
 
-const port = Number(process.env.MINIMRP_DESKTOP_PORT ?? "3001");
+const preferredPort = Number(process.env.MINIMRP_DESKTOP_PORT ?? "3001");
+const port = await findAvailablePort(preferredPort);
 const desktopUrl = `http://127.0.0.1:${port}`;
 
-function spawnProcess(command, args, extraEnv = {}) {
-  return spawn(command, args, {
-    stdio: "inherit",
-    shell: process.platform === "win32",
-    env: {
-      ...process.env,
-      ...extraEnv
-    }
-  });
-}
-
-async function waitForServer(url, attempts = 120) {
-  for (let index = 0; index < attempts; index += 1) {
-    try {
-      const response = await fetch(url);
-      if (response.ok) {
-        return;
-      }
-    } catch {
-      // Server not ready yet.
-    }
-
-    await delay(500);
-  }
-
-  throw new Error(`Timed out waiting for ${url}`);
+if (port !== preferredPort) {
+  console.log(`Desktop dev port ${preferredPort} was busy, using ${port} instead.`);
 }
 
 const nextProcess = spawnProcess(
   process.platform === "win32" ? "npm.cmd" : "npm",
   ["run", "dev", "--", "--hostname", "127.0.0.1", "--port", String(port)],
   {
-    MINIMRP_RUNTIME: "sqlite"
+    MINIMRP_RUNTIME: "sqlite",
+    NEXT_PUBLIC_MINIMRP_RUNTIME: "sqlite"
   }
 );
 
@@ -61,6 +38,7 @@ const electronProcess = spawnProcess(
   ["electron", "desktop/electron/main.mjs"],
   {
     MINIMRP_RUNTIME: "sqlite",
+    NEXT_PUBLIC_MINIMRP_RUNTIME: "sqlite",
     MINIMRP_DESKTOP_URL: desktopUrl
   }
 );

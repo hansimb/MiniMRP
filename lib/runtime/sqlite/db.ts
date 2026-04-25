@@ -1,10 +1,18 @@
-import { DatabaseSync } from "node:sqlite";
+import { createRequire } from "module";
+import type { DatabaseSync as DatabaseSyncType } from "node:sqlite";
 import { getDesktopDatabasePath } from "./files.ts";
 import { ensureSqliteSchemaSql } from "./schema.ts";
 
-let desktopDatabase: DatabaseSync | null = null;
+const require = createRequire(import.meta.url);
+
+function getDatabaseSyncClass() {
+  return (require("node:sqlite") as typeof import("node:sqlite")).DatabaseSync;
+}
+
+let desktopDatabase: DatabaseSyncType | null = null;
 
 export function createDesktopDatabase(filename: string) {
+  const DatabaseSync = getDatabaseSyncClass();
   const db = new DatabaseSync(filename);
   db.exec("pragma foreign_keys = on;");
 
@@ -15,11 +23,11 @@ export function createDesktopDatabase(filename: string) {
   return db;
 }
 
-export function ensureSqliteSchema(db: DatabaseSync) {
+export function ensureSqliteSchema(db: DatabaseSyncType) {
   db.exec(ensureSqliteSchemaSql);
 }
 
-export function listSqliteTables(db: DatabaseSync) {
+export function listSqliteTables(db: DatabaseSyncType) {
   return (db
     .prepare("select name from sqlite_master where type = 'table' and name not like 'sqlite_%' order by name")
     .all() as Array<{ name: string }>)
@@ -35,7 +43,7 @@ export function getDesktopDatabase() {
   return desktopDatabase;
 }
 
-export function setDesktopDatabaseForTests(db: DatabaseSync) {
+export function setDesktopDatabaseForTests(db: DatabaseSyncType) {
   desktopDatabase = db;
 }
 

@@ -1,7 +1,9 @@
 export type RuntimeMode = "supabase" | "sqlite";
 
 export function getRuntimeMode(): RuntimeMode {
-  const runtimeMode = process.env.MINIMRP_RUNTIME;
+  const runtimeMode =
+    process.env.MINIMRP_RUNTIME ??
+    process.env.NEXT_PUBLIC_MINIMRP_RUNTIME;
 
   if (runtimeMode === undefined) {
     return "supabase";

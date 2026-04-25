@@ -1,8 +1,6 @@
-"use server";
-
-import fs from "node:fs";
-import path from "node:path";
-import { randomUUID } from "node:crypto";
+import fs from "fs";
+import path from "path";
+import { randomUUID } from "crypto";
 import type { SQLInputValue } from "node:sqlite";
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";

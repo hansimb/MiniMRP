@@ -1,5 +1,5 @@
-import fs from "node:fs";
-import path from "node:path";
+import fs from "fs";
+import path from "path";
 
 const DEFAULT_DESKTOP_DATA_DIR = path.join(process.cwd(), ".data", "desktop");
 
