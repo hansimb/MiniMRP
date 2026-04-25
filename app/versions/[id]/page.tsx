@@ -5,7 +5,7 @@ import { VersionInfoPanel } from "@/features/versions/components/version-info-pa
 import { VersionMrpPanel } from "@/features/versions/components/version-mrp-panel";
 import { VersionPartsPanel } from "@/features/versions/components/version-parts-panel";
 import { buildMrpRows, calculateVersionUnitCost, summarizeMrpRows } from "@/lib/mappers/mrp";
-import { getPartCatalog, getVersionDetail } from "@/lib/supabase/queries/index";
+import { getRuntimeQueries } from "@/lib/runtime";
 import { Notice, PageHeader } from "@/shared/ui";
 
 export default async function VersionDetailPage(props: {
@@ -19,10 +19,11 @@ export default async function VersionDetailPage(props: {
 }) {
   const params = await props.params;
   const searchParams = (await props.searchParams) ?? {};
-  const { item, error } = await getVersionDetail(params.id, {
+  const queries = await getRuntimeQueries();
+  const { item, error } = await queries.getVersionDetail(params.id, {
     productionEntryId: searchParams.entry ?? null
   });
-  const { items: allParts } = await getPartCatalog();
+  const { items: allParts } = await queries.getPartCatalog();
   const requestedQuantity = Math.max(Number(searchParams.quantity ?? "1") || 1, 1);
   const mrpRows = buildMrpRows(item?.components ?? [], requestedQuantity);
   const mrpSummary = summarizeMrpRows(mrpRows);

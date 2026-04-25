@@ -1,7 +1,7 @@
 "use client";
 
 import { useMemo, useState } from "react";
-import { importMasterDataAction } from "@/lib/supabase/actions/index";
+import { importMasterDataAction } from "@/lib/runtime/actions";
 import {
   MASTER_DATA_REQUIRED_COLUMNS,
   MASTER_DATA_REQUIRED_VALUE_COLUMNS,

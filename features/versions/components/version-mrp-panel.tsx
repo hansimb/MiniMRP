@@ -2,7 +2,7 @@
 
 import { useMemo, useState } from "react";
 import type { MrpRow } from "@/lib/mappers/mrp";
-import { addProductionEntryAction } from "@/lib/supabase/actions/index";
+import { addProductionEntryAction } from "@/lib/runtime/actions";
 import { EmptyState, ModalTrigger, Panel } from "@/shared/ui";
 
 export function VersionMrpPanel(props: {

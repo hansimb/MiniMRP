@@ -1,10 +1,11 @@
 import Link from "next/link";
-import { createProductAction } from "@/lib/supabase/actions/index";
+import { createProductAction } from "@/lib/runtime/actions";
+import { getRuntimeQueries } from "@/lib/runtime";
 import { Badge, EmptyState, ModalTrigger, Notice, PageHeader, Panel } from "@/shared/ui";
-import { getProductList } from "@/lib/supabase/queries/index";
 
 export default async function ProductsPage() {
-  const { items, error } = await getProductList();
+  const queries = await getRuntimeQueries();
+  const { items, error } = await queries.getProductList();
 
   return (
     <div className="page">

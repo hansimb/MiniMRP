@@ -3,7 +3,7 @@ import { normalizeExternalUrl } from "@/lib/mappers/urls";
 import {
   createSellerForPartAction,
   upsertPartSellerLinkAction
-} from "@/lib/supabase/actions/index";
+} from "@/lib/runtime/actions";
 import { Badge, EmptyState, ModalTrigger, Panel } from "@/shared/ui";
 
 export function PartSellersPanel(props: { part: ComponentDetail | null }) {

@@ -15,4 +15,5 @@ test("runtime auth facade files exist", async () => {
   assert.equal(runtimeAuthSource.includes("requireRuntimeAdminAction"), true);
   assert.equal(runtimeAuthSource.includes("requireRuntimeAdminApiAccess"), true);
   assert.equal(fs.existsSync("lib/runtime/supabase/actions.ts"), true);
+  assert.equal(fs.existsSync("lib/runtime/actions.ts"), true);
 });

@@ -1,6 +1,6 @@
 "use client";
 
-import { adjustInventoryDeltaAction } from "@/lib/supabase/actions/index";
+import { adjustInventoryDeltaAction } from "@/lib/runtime/actions";
 
 export function InventoryAdjustForm(props: {
   componentId: string;

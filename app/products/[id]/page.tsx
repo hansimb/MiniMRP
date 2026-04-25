@@ -2,8 +2,8 @@
 import { notFound } from "next/navigation";
 import { ProductSummaryPanel } from "@/features/products/components/product-summary-panel";
 import { ProductVersionsPanel } from "@/features/products/components/product-versions-panel";
-import { updateProductAction } from "@/lib/supabase/actions/index";
-import { getProductDetail } from "@/lib/supabase/queries/index";
+import { updateProductAction } from "@/lib/runtime/actions";
+import { getRuntimeQueries } from "@/lib/runtime";
 import { BackLink, ModalTrigger, Notice, PageHeader } from "@/shared/ui";
 
 export default async function ProductDetailPage(props: {
@@ -12,7 +12,8 @@ export default async function ProductDetailPage(props: {
 }) {
   const params = await props.params;
   const searchParams = (await props.searchParams) ?? {};
-  const { item, error } = await getProductDetail(params.id);
+  const queries = await getRuntimeQueries();
+  const { item, error } = await queries.getProductDetail(params.id);
 
   if (!item && !error) {
     notFound();

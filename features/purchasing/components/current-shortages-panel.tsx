@@ -1,6 +1,6 @@
 import type { PurchasingItem } from "@/lib/types/domain";
 import { normalizeExternalUrl } from "@/lib/mappers/urls";
-import { upsertPartSellerLinkAction } from "@/lib/supabase/actions/index";
+import { upsertPartSellerLinkAction } from "@/lib/runtime/actions";
 import { EmptyState, ModalTrigger, Panel } from "@/shared/ui";
 
 export function CurrentShortagesPanel(props: { shortages: PurchasingItem[] }) {

@@ -4,15 +4,16 @@ import { PartInventoryPanel } from "@/features/parts/components/part-inventory-p
 import { PartInventoryLotsPanel } from "@/features/parts/components/part-inventory-lots-panel";
 import { PartSellersPanel } from "@/features/parts/components/part-sellers-panel";
 import { PartUsagePanel } from "@/features/parts/components/part-usage-panel";
-import { deletePartAction } from "@/lib/supabase/actions/index";
-import { getPartDetail } from "@/lib/supabase/queries/index";
+import { deletePartAction } from "@/lib/runtime/actions";
+import { getRuntimeQueries } from "@/lib/runtime";
 import { BackLink, ModalTrigger, Notice, PageHeader } from "@/shared/ui";
 
 export default async function ComponentDetailPage(props: {
   params: Promise<{ id: string }>;
 }) {
   const params = await props.params;
-  const { item, error } = await getPartDetail(params.id);
+  const queries = await getRuntimeQueries();
+  const { item, error } = await queries.getPartDetail(params.id);
 
   if (!item && !error) {
     notFound();

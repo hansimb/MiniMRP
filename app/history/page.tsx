@@ -1,8 +1,9 @@
 import { EmptyState, Notice, PageHeader, Panel } from "@/shared/ui";
-import { getHistoryEntries } from "@/lib/supabase/queries/index";
+import { getRuntimeQueries } from "@/lib/runtime";
 
 export default async function HistoryPage() {
-  const { items, error } = await getHistoryEntries();
+  const queries = await getRuntimeQueries();
+  const { items, error } = await queries.getHistoryEntries();
 
   return (
     <div className="page">

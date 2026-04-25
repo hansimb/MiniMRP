@@ -2,9 +2,7 @@ import { InventoryAdjustForm } from "@/features/inventory/components/inventory-a
 import Link from "next/link";
 import { InventoryEditForm } from "@/features/inventory/components/inventory-edit-form";
 import { PartPicker } from "@/features/parts/components/part-picker";
-import {
-  addInventoryAction
-} from "@/lib/supabase/actions/index";
+import { addInventoryAction } from "@/lib/runtime/actions";
 import type { ComponentListItem, ComponentMaster, InventoryItem } from "@/lib/types/domain";
 import { EmptyState, ModalTrigger, Panel } from "@/shared/ui";
 

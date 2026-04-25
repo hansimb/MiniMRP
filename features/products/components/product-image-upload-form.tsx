@@ -2,7 +2,7 @@
 
 import { useRef, useState } from "react";
 import type { FormEvent } from "react";
-import { uploadProductImageAction } from "@/lib/supabase/actions";
+import { uploadProductImageAction } from "@/lib/runtime/actions";
 import {
   MAX_UPLOAD_SIZE_LABEL,
   PRODUCT_IMAGE_MAX_BYTES,

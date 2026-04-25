@@ -13,6 +13,7 @@ import type {
 } from "@/lib/types/domain";
 
 type RuntimeResult<T> = Promise<{ error: string | null } & T>;
+type RuntimeAction = (formData: FormData) => Promise<void>;
 
 export interface RuntimeQueries {
   getHistoryEntries: () => RuntimeResult<{ items: HistoryEvent[] }>;
@@ -35,4 +36,35 @@ export interface RuntimeQueries {
   getVersionDetail: (id: string, options?: { productionEntryId?: string | null }) => RuntimeResult<{
     item: VersionDetail | null;
   }>;
+}
+
+export interface RuntimeActions {
+  addInventoryAction: RuntimeAction;
+  addProductionEntryAction: RuntimeAction;
+  adjustInventoryDeltaAction: RuntimeAction;
+  attachPartToVersionAction: RuntimeAction;
+  cancelProductionEntryAction: RuntimeAction;
+  completeProductionEntryAction: RuntimeAction;
+  createPartAction: RuntimeAction;
+  createProductAction: RuntimeAction;
+  createSellerForPartAction: RuntimeAction;
+  createVersionAction: RuntimeAction;
+  deleteInventoryLotAction: RuntimeAction;
+  deletePartAction: RuntimeAction;
+  deleteVersionAction: RuntimeAction;
+  deleteVersionAttachmentAction: RuntimeAction;
+  importMasterDataAction: RuntimeAction;
+  importVersionBomAction: RuntimeAction;
+  removePartFromVersionAction: RuntimeAction;
+  removeProductImageAction: RuntimeAction;
+  updateDefaultSafetyStockAction: RuntimeAction;
+  updateInventoryLotAction: RuntimeAction;
+  updatePartAction: RuntimeAction;
+  updatePartSafetyStockAction: RuntimeAction;
+  updateProductAction: RuntimeAction;
+  updateVersionAction: RuntimeAction;
+  updateVersionComponentReferencesAction: RuntimeAction;
+  uploadProductImageAction: RuntimeAction;
+  uploadVersionAttachmentAction: RuntimeAction;
+  upsertPartSellerLinkAction: RuntimeAction;
 }

@@ -1,4 +1,4 @@
-import { deleteInventoryLotAction, updateInventoryLotAction } from "@/lib/supabase/actions/index";
+import { deleteInventoryLotAction, updateInventoryLotAction } from "@/lib/runtime/actions";
 import type { InventoryLot } from "@/lib/types/domain";
 import { ModalTrigger } from "@/shared/ui";
 

@@ -1,10 +1,11 @@
 import { CurrentShortagesPanel } from "@/features/purchasing/components/current-shortages-panel";
 import { NearSafetyPanel } from "@/features/purchasing/components/near-safety-panel";
-import { getPurchasingOverview } from "@/lib/supabase/queries/index";
+import { getRuntimeQueries } from "@/lib/runtime";
 import { Notice, PageHeader } from "@/shared/ui";
 
 export default async function PurchasingPage() {
-  const { shortages, nearSafety, error } = await getPurchasingOverview();
+  const queries = await getRuntimeQueries();
+  const { shortages, nearSafety, error } = await queries.getPurchasingOverview();
 
   return (
     <div className="page">

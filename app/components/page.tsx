@@ -1,13 +1,14 @@
 import { PartsFiltersPanel } from "@/features/parts/components/parts-filters-panel";
 import { PartsListPanel } from "@/features/parts/components/parts-list-panel";
-import { getPartCatalog } from "@/lib/supabase/queries/index";
+import { getRuntimeQueries } from "@/lib/runtime";
 import { Notice, PageHeader } from "@/shared/ui";
 
 export default async function ComponentsPage(props: {
   searchParams?: Promise<{ category?: string; search?: string }>;
 }) {
   const searchParams = (await props.searchParams) ?? {};
-  const { items, error } = await getPartCatalog({
+  const queries = await getRuntimeQueries();
+  const { items, error } = await queries.getPartCatalog({
     category: searchParams.category,
     search: searchParams.search
   });

@@ -4,7 +4,7 @@ import {
   attachPartToVersionAction,
   removePartFromVersionAction,
   updateVersionComponentReferencesAction
-} from "@/lib/supabase/actions/index";
+} from "@/lib/runtime/actions";
 import type { ComponentListItem, VersionDetail } from "@/lib/types/domain";
 import { EmptyState, ModalTrigger, Panel } from "@/shared/ui";
 
