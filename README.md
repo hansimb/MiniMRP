@@ -97,7 +97,7 @@ npm run dev
 
 Download the latest Windows portable test build here:
 
-- [MiniMRP Desktop test build](https://drive.google.com/file/d/1BFIWXomwp3pJmD-n93Y3mOQpdydvvUIx/view?usp=sharing)
+- [MiniMRP Desktop test build](https://drive.google.com/file/d/11cU19wTIwC65R6vVtSnp1RJ5CTnsWhWa/view?usp=sharing)
 
 Build the Windows desktop executable with:
 
