@@ -6,7 +6,7 @@ import { usePathname, useRouter } from "next/navigation";
 import { startTransition, type ReactNode } from "react";
 import { createRuntimeBrowserClient } from "@/lib/runtime/browser-client";
 import { getPostLogoutRedirectPath } from "@/lib/auth/redirects";
-import { getRuntimeMode } from "@/lib/runtime/env";
+import { getBrowserRuntimeMode } from "@/lib/runtime/env";
 
 const navigation = [
   { href: "/products", label: "Products" },
@@ -27,7 +27,7 @@ export function AppShell({
 }) {
   const pathname = usePathname();
   const router = useRouter();
-  const runtimeMode = getRuntimeMode();
+  const runtimeMode = getBrowserRuntimeMode();
 
   if (pathname === "/login" || pathname === "/forbidden") {
     return <main className="content">{children}</main>;
