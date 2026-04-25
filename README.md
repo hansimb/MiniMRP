@@ -14,21 +14,20 @@
 - Import entry points for bulk CSV/Excel workflows
 - Change history for UI-driven updates
 
+## Runtimes
+
+- web version with supabase integration
+- Local desktop version, usin local SQLite, no login, no supabase
+
 ## How It Works
 
-From a user perspective, the workflow is intentionally straightforward:
-
-- Start from `Products`, where each product contains one or more versions.
-- Open a version to view its BOM, attachments, unit cost estimate, and material requirements.
-- Manage the shared component catalog in `Components`, including supplier links and safety stock targets.
-- Track current stock in `Inventory` and adjust quantities as material arrives or is consumed.
-- Add versions to `Production` to reserve available inventory and store production-driven material requirements.
-- Review `Purchasing` to see current shortages and parts that are approaching safety stock.
-- Use `History` to inspect changes made through the UI and `Export` actions for CSV handoff workflows.
+1.  Add inventory & components by "master data"
+2.  create product and add version
+3.  Import BOM list or add components
+4.  Calculate MRP and add to production
+5.  Shortages & safety stock purchases calculated automatically
 
 ## Project Structure
-
-The project is intentionally simple and split by responsibility:
 
 - [`app`](./app): Next.js routes and thin page-level composition
 - [`features`](./features): feature-specific UI and page sections
@@ -40,17 +39,6 @@ The project is intentionally simple and split by responsibility:
 - [`tests`](./tests): focused logic-level tests
 
 Note about naming: the business domain still uses the `/components` route in the UI, but the internal feature code is named `parts` to avoid confusion with reusable UI components.
-
-## Technical Structure
-
-- Next.js App Router renders the internal admin UI.
-- Supabase is the backend and source of truth for relational data.
-- Pages stay thin and call feature components plus domain-specific queries/actions.
-- MRP, purchasing, inventory, and export logic are kept outside the UI in shared mappers and server modules.
-
-## Architecture
-
-This project uses a pragmatic, lightweight clean structure: UI, data access, and business logic are separated, but without over-engineering.
 
 ## Get Started
 
@@ -131,12 +119,3 @@ For day-to-day desktop development without packaging, use:
 ```bash
 npm run dev:desktop
 ```
-
-## Notes
-
-- The app redirects `/` to `/products`.
-- Production and purchasing flows depend on the latest Supabase schema being applied.
-- Import UI exists already, while some bulk import persistence flows are still designed to be extended further.
-- This version is suitable for a live internal demo branch, but production rollout still needs stronger import logic, authentication, and security hardening.
-
---
