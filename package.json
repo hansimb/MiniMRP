@@ -1,6 +1,6 @@
 {
   "name": "minimrp",
-  "version": "0.1.3",
+  "version": "0.1.4",
   "private": true,
   "type": "module",
   "main": "desktop/electron/packaged-main.mjs",
@@ -8,7 +8,7 @@
     "dev": "next dev",
     "dev:desktop": "node desktop/scripts/dev.mjs",
     "build": "next build",
-    "build:desktop": "next build && node desktop/scripts/prepare-bundle.mjs",
+    "build:desktop": "node desktop/scripts/build.mjs",
     "start": "next start",
     "start:desktop": "node desktop/scripts/start.mjs",
     "dist:desktop": "npm run build:desktop && electron-builder --win nsis",

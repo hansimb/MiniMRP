@@ -60,3 +60,14 @@ test("desktop distribution defaults to NSIS while keeping a portable fallback sc
     artifactName: "MiniMRP-Portable-${version}.exe"
   });
 });
+
+test("desktop build script compiles the app with sqlite runtime env", () => {
+  const packageJson = JSON.parse(fs.readFileSync("package.json", "utf8"));
+  const buildScriptSource = fs.readFileSync("desktop/scripts/build.mjs", "utf8");
+
+  assert.equal(packageJson.scripts["build:desktop"], "node desktop/scripts/build.mjs");
+  assert.equal(buildScriptSource.includes('MINIMRP_RUNTIME: "sqlite"'), true);
+  assert.equal(buildScriptSource.includes('NEXT_PUBLIC_MINIMRP_RUNTIME: "sqlite"'), true);
+  assert.equal(buildScriptSource.includes('["run", "build"]'), true);
+  assert.equal(buildScriptSource.includes('await import("./prepare-bundle.mjs");'), true);
+});
