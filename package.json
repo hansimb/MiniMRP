@@ -1,6 +1,6 @@
 {
   "name": "minimrp",
-  "version": "0.1.1",
+  "version": "0.1.5",
   "private": true,
   "type": "module",
   "main": "desktop/electron/packaged-main.mjs",
@@ -8,10 +8,11 @@
     "dev": "next dev",
     "dev:desktop": "node desktop/scripts/dev.mjs",
     "build": "next build",
-    "build:desktop": "next build && node desktop/scripts/prepare-bundle.mjs",
+    "build:desktop": "node desktop/scripts/build.mjs",
     "start": "next start",
     "start:desktop": "node desktop/scripts/start.mjs",
-    "dist:desktop": "npm run build:desktop && electron-builder --win portable",
+    "dist:desktop": "npm run build:desktop && electron-builder --win nsis",
+    "dist:desktop:portable": "npm run build:desktop && electron-builder --win portable",
     "lint": "next lint",
     "typecheck": "tsc --noEmit",
     "test": "node --experimental-strip-types --test --test-isolation=none tests/*.test.ts",
@@ -70,15 +71,21 @@
     "win": {
       "target": [
         {
-          "target": "portable",
+          "target": "nsis",
           "arch": [
             "x64"
           ]
         }
       ]
     },
+    "nsis": {
+      "artifactName": "MiniMRP-Setup-${version}.exe",
+      "oneClick": false,
+      "perMachine": false,
+      "allowToChangeInstallationDirectory": true
+    },
     "portable": {
-      "artifactName": "MiniMRP-Desktop-${version}.exe"
+      "artifactName": "MiniMRP-Portable-${version}.exe"
     }
   }
 }

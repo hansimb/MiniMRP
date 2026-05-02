@@ -2,13 +2,13 @@
 import { notFound } from "next/navigation";
 import { ProductSummaryPanel } from "@/features/products/components/product-summary-panel";
 import { ProductVersionsPanel } from "@/features/products/components/product-versions-panel";
-import { updateProductAction } from "@/lib/runtime/actions";
+import { deleteProductAction, updateProductAction } from "@/lib/runtime/actions";
 import { getRuntimeQueries } from "@/lib/runtime";
 import { BackLink, ModalTrigger, Notice, PageHeader } from "@/shared/ui";
 
 export default async function ProductDetailPage(props: {
   params: Promise<{ id: string }>;
-  searchParams?: Promise<{ imageError?: string }>;
+  searchParams?: Promise<{ imageError?: string; deleteError?: string }>;
 }) {
   const params = await props.params;
   const searchParams = (await props.searchParams) ?? {};
@@ -38,11 +38,25 @@ export default async function ProductDetailPage(props: {
                 </form>
               </ModalTrigger>
             ) : null}
+            {item ? (
+              <ModalTrigger buttonLabel="Delete product" buttonClassName="button danger" title={`Delete ${item.name}?`}>
+                <form action={deleteProductAction} className="stack">
+                  <input type="hidden" name="id" value={item.id} />
+                  <div className="notice error">
+                    This will permanently delete the product. Deletion is blocked if the product still has versions or production history.
+                  </div>
+                  <button className="button danger" type="submit">
+                    Confirm delete
+                  </button>
+                </form>
+              </ModalTrigger>
+            ) : null}
           </>
         }
       />
 
       {error ? <Notice error>{error}</Notice> : null}
+      {searchParams.deleteError ? <Notice error>{searchParams.deleteError}</Notice> : null}
 
       <div className="two-column">
         <ProductSummaryPanel product={item} imageError={searchParams.imageError ?? null} />

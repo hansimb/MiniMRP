@@ -51,6 +51,7 @@ export interface RuntimeActions {
   createVersionAction: RuntimeAction;
   deleteInventoryLotAction: RuntimeAction;
   deletePartAction: RuntimeAction;
+  deleteProductAction: RuntimeAction;
   deleteVersionAction: RuntimeAction;
   deleteVersionAttachmentAction: RuntimeAction;
   importMasterDataAction: RuntimeAction;

@@ -131,6 +131,48 @@ export async function updateProductAction(formData: FormData) {
   redirect(`/products/${id}`);
 }
 
+export async function deleteProductAction(formData: FormData) {
+  const id = requiredValue(formData.get("id"), "Product id");
+  const previous = getRow<{ id: string; name: string; image: string | null }>(
+    "select id, name, image from products where id = :id",
+    { id }
+  );
+  if (!previous) {
+    throw new Error("Product not found.");
+  }
+
+  const versionCount = getRow<{ count: number }>(
+    "select count(*) as count from product_versions where product_id = :id",
+    { id }
+  )?.count ?? 0;
+
+  if (versionCount > 0) {
+    redirect(`/products/${id}?deleteError=${encodeURIComponent("Cannot delete product while versions still exist.")}`);
+  }
+
+  const productionCount = getRow<{ count: number }>(
+    "select count(*) as count from production_entries",
+  )?.count ?? 0;
+
+  if (productionCount > 0) {
+    redirect(`/products/${id}?deleteError=${encodeURIComponent("Cannot delete product while production history exists.")}`);
+  }
+
+  deleteDesktopStoredFileIfPresent(previous.image);
+  run("delete from products where id = :id", { id });
+
+  await recordHistory({
+    entity_type: "product",
+    entity_id: id,
+    action_type: "delete",
+    summary: `Deleted product "${previous.name}"`,
+    old_value: stringifyHistoryValue(previous)
+  });
+
+  revalidateAppViews(["/products", "/history"]);
+  redirect("/products");
+}
+
 export async function uploadProductImageAction(formData: FormData) {
   const id = requiredValue(formData.get("id"), "Product id");
   const file = formData.get("file");

@@ -99,6 +99,69 @@ export async function updateProductAction(formData: FormData) {
   redirect(`/products/${id}`);
 }
 
+export async function deleteProductAction(formData: FormData) {
+  await requireAdminAction("/products");
+  const supabase = createSupabaseAdminClient();
+  const id = requiredValue(formData.get("id"), "Product id");
+  const previous = await supabase
+    .from("products")
+    .select("id,name,image")
+    .eq("id", id)
+    .maybeSingle<{ id: string; name: string; image: string | null }>();
+
+  if (previous.error || !previous.data) {
+    throw new Error(previous.error?.message ?? "Product not found.");
+  }
+
+  const versionsResult = await supabase
+    .schema(PRIVATE_SCHEMA)
+    .from(PRODUCT_VERSIONS_TABLE)
+    .select("id", { count: "exact", head: true })
+    .eq("product_id", id);
+
+  if (versionsResult.error) {
+    throw new Error(versionsResult.error.message);
+  }
+
+  if ((versionsResult.count ?? 0) > 0) {
+    redirectProductDeleteError(id, "Cannot delete product while versions still exist.");
+  }
+
+  const productionResult = await supabase
+    .from("production_entries")
+    .select("id", { count: "exact", head: true });
+
+  if (productionResult.error) {
+    throw new Error(productionResult.error.message);
+  }
+
+  if ((productionResult.count ?? 0) > 0) {
+    redirectProductDeleteError(id, "Cannot delete product while production history exists.");
+  }
+
+  await deleteStoredFileIfPresent({
+    supabase,
+    bucket: PRODUCT_IMAGES_BUCKET,
+    storedValue: previous.data.image
+  });
+
+  const result = await supabase.from("products").delete().eq("id", id);
+  if (result.error) {
+    throw new Error(result.error.message);
+  }
+
+  await recordHistory({
+    entity_type: "product",
+    entity_id: id,
+    action_type: "delete",
+    summary: `Deleted product "${previous.data.name}"`,
+    old_value: stringifyHistoryValue(previous.data)
+  });
+
+  revalidatePath("/products");
+  redirect("/products");
+}
+
 export async function uploadProductImageAction(formData: FormData) {
   await requireAdminAction("/products");
   const supabase = createSupabaseAdminClient();
@@ -212,4 +275,8 @@ export async function removeProductImageAction(formData: FormData) {
 
 function redirectProductImageError(productId: string, message: string): never {
   redirect(`/products/${productId}?imageError=${encodeURIComponent(message)}`);
+}
+
+function redirectProductDeleteError(productId: string, message: string): never {
+  redirect(`/products/${productId}?deleteError=${encodeURIComponent(message)}`);
 }
