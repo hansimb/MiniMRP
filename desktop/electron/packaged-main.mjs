@@ -13,6 +13,99 @@ function logStartup(message, extra = null) {
   fs.appendFileSync(startupLogPath, line);
 }
 
+function buildLoadingPageHtml(title, message) {
+  return `<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>${title}</title>
+    <style>
+      :root {
+        color-scheme: light;
+      }
+
+      body {
+        margin: 0;
+        min-height: 100vh;
+        display: grid;
+        place-items: center;
+        background:
+          radial-gradient(circle at top, rgba(199, 167, 106, 0.22), transparent 45%),
+          linear-gradient(180deg, #f7f2e8 0%, #efe6d6 100%);
+        color: #2f2417;
+        font-family: "Segoe UI", "Inter", sans-serif;
+      }
+
+      main {
+        width: min(420px, calc(100vw - 48px));
+        padding: 32px 28px;
+        border: 1px solid rgba(115, 89, 44, 0.16);
+        border-radius: 18px;
+        background: rgba(255, 251, 245, 0.94);
+        box-shadow: 0 18px 50px rgba(80, 56, 23, 0.12);
+      }
+
+      .eyebrow {
+        margin: 0 0 10px;
+        font-size: 12px;
+        letter-spacing: 0.14em;
+        text-transform: uppercase;
+        color: #7a5e33;
+      }
+
+      h1 {
+        margin: 0 0 12px;
+        font-size: 28px;
+        line-height: 1.1;
+      }
+
+      p {
+        margin: 0;
+        font-size: 15px;
+        line-height: 1.5;
+        color: #5d4a2f;
+      }
+
+      .meter {
+        margin-top: 22px;
+        height: 6px;
+        border-radius: 999px;
+        overflow: hidden;
+        background: rgba(122, 94, 51, 0.14);
+      }
+
+      .meter::after {
+        content: "";
+        display: block;
+        width: 38%;
+        height: 100%;
+        border-radius: inherit;
+        background: linear-gradient(90deg, #9e7a3d 0%, #d4ae62 100%);
+        animation: loading 1.05s ease-in-out infinite;
+      }
+
+      @keyframes loading {
+        0% {
+          transform: translateX(-120%);
+        }
+        100% {
+          transform: translateX(360%);
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <main>
+      <p class="eyebrow">MiniMRP desktop</p>
+      <h1>${title}</h1>
+      <p>${message}</p>
+      <div class="meter" aria-hidden="true"></div>
+    </main>
+  </body>
+</html>`;
+}
+
 process.on("uncaughtException", (error) => {
   logStartup("uncaughtException", {
     message: error instanceof Error ? error.message : String(error)
@@ -95,7 +188,7 @@ async function startEmbeddedServer() {
   return desktopUrl;
 }
 
-function createWindow(desktopUrl) {
+function createWindow() {
   const window = new BrowserWindow({
     show: false,
     width: 1440,
@@ -113,6 +206,12 @@ function createWindow(desktopUrl) {
     logStartup("windowReadyToShow");
     window.show();
   });
+  const loadingPageHtml = buildLoadingPageHtml("Opening MiniMRP", "Starting the local desktop workspace.");
+  window.loadURL(`data:text/html;charset=utf-8,${encodeURIComponent(loadingPageHtml)}`);
+  return window;
+}
+
+function navigateWindowToApp(window, desktopUrl) {
   window.webContents.on("did-finish-load", () => {
     logStartup("windowDidFinishLoad", { desktopUrl });
   });
@@ -124,16 +223,30 @@ function createWindow(desktopUrl) {
   window.loadURL(desktopUrl);
 }
 
+function showStartupError(window, error) {
+  const message = error instanceof Error ? error.message : "Unknown startup error.";
+  const errorPageHtml = buildLoadingPageHtml("MiniMRP could not start", message);
+  logStartup("startupError", { message });
+  window.loadURL(`data:text/html;charset=utf-8,${encodeURIComponent(errorPageHtml)}`);
+}
+
 app.whenReady().then(async () => {
   logStartup("appWhenReady");
-  const desktopUrl = await startEmbeddedServer();
-  createWindow(desktopUrl);
+  const window = createWindow();
 
-  app.on("activate", async () => {
-    if (BrowserWindow.getAllWindows().length === 0) {
-      createWindow(desktopUrl);
-    }
-  });
+  try {
+    const desktopUrl = await startEmbeddedServer();
+    navigateWindowToApp(window, desktopUrl);
+
+    app.on("activate", async () => {
+      if (BrowserWindow.getAllWindows().length === 0) {
+        const nextWindow = createWindow();
+        navigateWindowToApp(nextWindow, desktopUrl);
+      }
+    });
+  } catch (error) {
+    showStartupError(window, error);
+  }
 });
 
 app.on("before-quit", () => {

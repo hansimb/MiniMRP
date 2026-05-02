@@ -1,6 +1,6 @@
 {
   "name": "minimrp",
-  "version": "0.1.1",
+  "version": "0.1.2",
   "private": true,
   "type": "module",
   "main": "desktop/electron/packaged-main.mjs",
@@ -54,13 +54,6 @@
       {
         "from": "dist/desktop-bundle",
         "to": "desktop-bundle",
-        "filter": [
-          "**/*"
-        ]
-      },
-      {
-        "from": "dist/desktop-bundle/node_modules",
-        "to": "desktop-bundle/node_modules",
         "filter": [
           "**/*"
         ]
