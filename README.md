@@ -103,6 +103,10 @@ npm run dev:desktop
 
 ## Desktop Executable
 
+Download the latest Windows desktop build here:
+
+- [MiniMRP Desktop build](https://drive.google.com/file/d/1OVDMgQav7dVuqXXb0pTYTY2Gk65cMRCM/view?usp=sharing)
+
 Build the default Windows installer with:
 
 ```bash
