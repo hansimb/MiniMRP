@@ -15,6 +15,7 @@ export {
 export {
   createProductAction,
   createVersionAction,
+  deleteProductAction,
   removeProductImageAction,
   updateProductAction,
   uploadProductImageAction

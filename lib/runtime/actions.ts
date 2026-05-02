@@ -61,6 +61,10 @@ export async function deletePartAction(formData: FormData) {
   return (await getRuntimeActionsModule()).deletePartAction(formData);
 }
 
+export async function deleteProductAction(formData: FormData) {
+  return (await getRuntimeActionsModule()).deleteProductAction(formData);
+}
+
 export async function deleteVersionAction(formData: FormData) {
   return (await getRuntimeActionsModule()).deleteVersionAction(formData);
 }
