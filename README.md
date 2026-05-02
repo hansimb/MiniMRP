@@ -95,6 +95,7 @@ npm run dev:desktop
 - `npm run build`
 - `npm run build:desktop`
 - `npm run dist:desktop`
+- `npm run dist:desktop:portable`
 - `npm run start`
 - `npm run lint`
 - `npm run typecheck`
@@ -102,17 +103,21 @@ npm run dev:desktop
 
 ## Desktop Executable
 
-Download the latest Windows portable test build here:
-
-- [MiniMRP Desktop test build](https://drive.google.com/file/d/11cU19wTIwC65R6vVtSnp1RJ5CTnsWhWa/view?usp=sharing)
-
-Build the Windows desktop executable with:
+Build the default Windows installer with:
 
 ```bash
 npm run dist:desktop
 ```
 
-The generated portable `.exe` is written under [dist/desktop](./dist/desktop). The expected artifact name is `MiniMRP-Desktop-<version>.exe`.
+The generated NSIS installer is written under [dist/desktop](./dist/desktop). The expected artifact name is `MiniMRP-Setup-<version>.exe`.
+
+Build the portable fallback executable with:
+
+```bash
+npm run dist:desktop:portable
+```
+
+The generated portable `.exe` is also written under [dist/desktop](./dist/desktop). The expected artifact name is `MiniMRP-Portable-<version>.exe`.
 
 For day-to-day desktop development without packaging, use:
 
