@@ -13,27 +13,35 @@ export async function getProductList(): Promise<{ items: ProductListItem[]; erro
   const productsResult = await safeSelect<{ id: string; name: string; image: string | null }>(
     supabase.from("products").select("id,name,image").order("name")
   );
-  const versionsResult = await safeSelect<ProductVersion>(
-    adminSupabase.schema(PRIVATE_SCHEMA).from(PRODUCT_VERSIONS_TABLE).select("id,product_id,version_number")
-  );
 
-  const error = productsResult.error ?? versionsResult.error;
-  if (error) {
+  if (productsResult.error) {
     return {
       items: [],
-      error
+      error: productsResult.error
     };
   }
 
   try {
     const items = await Promise.all(
-      productsResult.data.map(async (product) => ({
-        id: product.id,
-        name: product.name,
-        image: await resolveStoredFileUrl(adminSupabase, PRODUCT_IMAGES_BUCKET, product.image),
-        image_path: product.image,
-        versionCount: versionsResult.data.filter((version) => version.product_id === product.id).length
-      }))
+      productsResult.data.map(async (product) => {
+        const versionCountResult = await adminSupabase
+          .schema(PRIVATE_SCHEMA)
+          .from(PRODUCT_VERSIONS_TABLE)
+          .select("id", { count: "exact", head: true })
+          .eq("product_id", product.id);
+
+        if (versionCountResult.error) {
+          throw new Error(versionCountResult.error.message);
+        }
+
+        return {
+          id: product.id,
+          name: product.name,
+          image: await resolveStoredFileUrl(adminSupabase, PRODUCT_IMAGES_BUCKET, product.image),
+          image_path: product.image,
+          versionCount: versionCountResult.count ?? 0
+        };
+      })
     );
 
     return {

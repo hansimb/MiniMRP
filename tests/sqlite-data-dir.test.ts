@@ -100,3 +100,59 @@ test("desktop sqlite data survives a database reopen from the same user data dir
     fs.rmSync(tempDir, { recursive: true, force: true });
   }
 });
+
+test("desktop product list reports correct version counts with more than five products", async () => {
+  const tempDir = fs.mkdtempSync(path.join(os.tmpdir(), "minimrp-desktop-version-counts-"));
+  process.env.MINIMRP_DESKTOP_DATA_DIR = tempDir;
+
+  try {
+    const products = [
+      { id: "product-1", name: "Alpha", versions: ["A"] },
+      { id: "product-2", name: "Beta", versions: ["A", "B"] },
+      { id: "product-3", name: "Gamma", versions: [] },
+      { id: "product-4", name: "Delta", versions: ["A", "B", "C"] },
+      { id: "product-5", name: "Epsilon", versions: ["A"] },
+      { id: "product-6", name: "Zeta", versions: ["A", "B"] },
+      { id: "product-7", name: "Eta", versions: ["A", "B", "C", "D"] },
+      { id: "product-8", name: "Theta", versions: [] }
+    ];
+
+    for (const product of products) {
+      run("insert into products (id, name, image) values (:id, :name, null)", {
+        id: product.id,
+        name: product.name
+      });
+
+      for (const versionNumber of product.versions) {
+        run(
+          "insert into product_versions (id, product_id, version_number) values (:id, :product_id, :version_number)",
+          {
+            id: `${product.id}-${versionNumber}`,
+            product_id: product.id,
+            version_number: versionNumber
+          }
+        );
+      }
+    }
+
+    resetDesktopDatabaseForTests();
+
+    const productList = await getProductList();
+
+    assert.equal(productList.error, null);
+    assert.equal(productList.items.length, products.length);
+
+    const versionCountByName = new Map(productList.items.map((item) => [item.name, item.versionCount]));
+    assert.equal(versionCountByName.get("Alpha"), 1);
+    assert.equal(versionCountByName.get("Beta"), 2);
+    assert.equal(versionCountByName.get("Gamma"), 0);
+    assert.equal(versionCountByName.get("Delta"), 3);
+    assert.equal(versionCountByName.get("Epsilon"), 1);
+    assert.equal(versionCountByName.get("Zeta"), 2);
+    assert.equal(versionCountByName.get("Eta"), 4);
+    assert.equal(versionCountByName.get("Theta"), 0);
+  } finally {
+    resetDesktopDatabaseForTests();
+    fs.rmSync(tempDir, { recursive: true, force: true });
+  }
+});
