@@ -99,7 +99,7 @@ export function InventoryRowsPanel(props: {
                           formId={`inventory-adjust-${item.id}`}
                         />
                       </ModalTrigger>
-                      <ModalTrigger buttonLabel="Edit" title={`Update settings: ${item.component?.name ?? item.id}`}>
+                      <ModalTrigger buttonLabel="Safety stock" title={`Update settings: ${item.component?.name ?? item.id}`}>
                         <InventoryEditForm
                           inventoryId={item.id}
                           componentId={item.component_id}
