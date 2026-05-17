@@ -30,4 +30,29 @@ test("product delete action guards against versions and production references on
     assert.equal(source.includes("Cannot delete product while production history exists."), true);
     assert.equal(source.includes("Cannot delete product while history entries exist."), false);
   }
+
+  assert.equal(supabaseSource.includes('.in("version_id", versionIds)'), true);
+  assert.equal(
+    sqliteSource.includes("where version_id in (select id from product_versions where product_id = :id)"),
+    true
+  );
+});
+
+test("version mutations revalidate the product list page", () => {
+  const supabaseSource = fs.readFileSync("lib/supabase/actions/products.ts", "utf8");
+  const sqliteSource = fs.readFileSync("lib/runtime/sqlite/actions.ts", "utf8");
+
+  for (const source of [supabaseSource, sqliteSource]) {
+    assert.equal(source.includes('revalidatePath("/products")') || source.includes('"/products"'), true);
+  }
+
+  assert.equal(
+    supabaseSource.includes('revalidatePath("/products");') &&
+      supabaseSource.includes('revalidatePath(`/products/${productId}`);'),
+    true
+  );
+  assert.equal(
+    sqliteSource.includes('revalidateAppViews(["/products", `/products/${productId}`, "/history"]);'),
+    true
+  );
 });

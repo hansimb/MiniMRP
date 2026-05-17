@@ -13,9 +13,18 @@ export function calculateInventorySummaryFromLots(lots: InventoryLot[]) {
   const quantity_available = roundQuantity(activeLots.reduce((total, lot) => total + lot.quantity_remaining, 0));
 
   if (quantity_available <= 0) {
+    const latestLot = [...lots].sort((left, right) => {
+      const receivedDelta = new Date(right.received_at).getTime() - new Date(left.received_at).getTime();
+      if (receivedDelta !== 0) {
+        return receivedDelta;
+      }
+
+      return new Date(right.created_at).getTime() - new Date(left.created_at).getTime();
+    })[0];
+
     return {
       quantity_available: 0,
-      purchase_price: null as number | null
+      purchase_price: latestLot ? roundCurrency(latestLot.unit_cost) : null
     };
   }
 

@@ -37,6 +37,38 @@ test("calculateInventorySummaryFromLots returns quantity and weighted average fr
   });
 });
 
+test("calculateInventorySummaryFromLots keeps the latest known unit cost when stock reaches zero", () => {
+  const summary = calculateInventorySummaryFromLots([
+    {
+      id: "lot-1",
+      component_id: "component-1",
+      quantity_received: 10,
+      quantity_remaining: 0,
+      unit_cost: 0.12,
+      received_at: "2026-04-01T10:00:00.000Z",
+      source: "import",
+      notes: null,
+      created_at: "2026-04-01T10:00:00.000Z"
+    },
+    {
+      id: "lot-2",
+      component_id: "component-1",
+      quantity_received: 5,
+      quantity_remaining: 0,
+      unit_cost: 0.15,
+      received_at: "2026-04-02T10:00:00.000Z",
+      source: "purchase",
+      notes: null,
+      created_at: "2026-04-02T10:00:00.000Z"
+    }
+  ]);
+
+  assert.deepEqual(summary, {
+    quantity_available: 0,
+    purchase_price: 0.15
+  });
+});
+
 test("consumeInventoryLotsFifo consumes oldest lots first", () => {
   const result = consumeInventoryLotsFifo(
     [

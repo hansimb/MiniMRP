@@ -104,7 +104,7 @@ export async function createVersionAction(formData: FormData) {
     new_value: stringifyHistoryValue({ id, product_id: productId, version_number: versionNumber })
   });
 
-  revalidateAppViews([`/products/${productId}`, "/history"]);
+  revalidateAppViews(["/products", `/products/${productId}`, "/history"]);
   redirect(`/products/${productId}`);
 }
 
@@ -151,7 +151,8 @@ export async function deleteProductAction(formData: FormData) {
   }
 
   const productionCount = getRow<{ count: number }>(
-    "select count(*) as count from production_entries",
+    "select count(*) as count from production_entries where version_id in (select id from product_versions where product_id = :id)",
+    { id }
   )?.count ?? 0;
 
   if (productionCount > 0) {
@@ -299,7 +300,7 @@ export async function deleteVersionAction(formData: FormData) {
     old_value: stringifyHistoryValue(previous)
   });
 
-  revalidateAppViews([`/products/${productId}`, "/history"]);
+  revalidateAppViews(["/products", `/products/${productId}`, "/history"]);
   redirect(`/products/${productId}`);
 }
 

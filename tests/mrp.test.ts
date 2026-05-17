@@ -44,6 +44,47 @@ test("buildMrpRows calculates quantities and costs", () => {
   assert.equal(rows[0]?.netCost, 2.5);
 });
 
+test("buildMrpRows calculates all MRP values for out-of-stock parts when a unit price exists", () => {
+  const rows = buildMrpRows(
+    [
+      {
+        component: {
+          id: "1",
+          sku: "RES-1K-0603",
+          name: "Resistor",
+          category: "Resistor",
+          producer: "Yageo",
+          value: "1k",
+          safety_stock: 25
+        },
+        references: ["R1", "R2", "R3"],
+        quantity: 3,
+        lead_time: 7,
+        inventory: {
+          id: "inv-1",
+          component_id: "1",
+          quantity_available: 0,
+          purchase_price: 0.125
+        }
+      }
+    ],
+    4
+  );
+
+  assert.equal(rows.length, 1);
+  assert.equal(rows[0]?.quantityPerProduct, 3);
+  assert.equal(rows[0]?.buildQuantity, 4);
+  assert.equal(rows[0]?.safetyStock, 25);
+  assert.equal(rows[0]?.leadTime, 7);
+  assert.equal(rows[0]?.availableInventory, 0);
+  assert.equal(rows[0]?.unitPrice, 0.125);
+  assert.equal(rows[0]?.grossRequirement, 12);
+  assert.equal(rows[0]?.netRequirement, 12);
+  assert.equal(rows[0]?.reservedForThisCalculation, 0);
+  assert.equal(rows[0]?.grossCost, 1.5);
+  assert.equal(rows[0]?.netCost, 1.5);
+});
+
 test("calculateVersionUnitCost sums one product cost", () => {
   const total = calculateVersionUnitCost([
     {
