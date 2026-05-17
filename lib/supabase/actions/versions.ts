@@ -2,7 +2,7 @@
 
 import { requireAdminAction } from "@/lib/auth/require-admin";
 import { buildVersionBomReferenceRows, normalizeVersionBomRows, parseVersionBomFile } from "@/lib/import/version-bom";
-import { normalizeReferencesInput } from "@/lib/mappers/bom";
+import { normalizeReferencesInput, validateVersionComponentReferences } from "@/lib/mappers/bom";
 import { VERSION_ATTACHMENT_MAX_BYTES, validateUploadedFile } from "@/lib/uploads/validation";
 import { createSupabaseAdminClient } from "../admin-client";
 import { deleteStoredFileIfPresent, uploadStoredFile, VERSION_ATTACHMENTS_BUCKET } from "../storage";
@@ -94,6 +94,29 @@ export async function attachPartToVersionAction(formData: FormData) {
   const versionId = requiredValue(formData.get("version_id"), "Version id");
   const componentId = requiredValue(formData.get("component_id"), "Component id");
   const references = normalizeReferencesInput(formData.get("references"));
+  const existingReferencesResult = await supabase
+    .schema(PRIVATE_SCHEMA)
+    .from(COMPONENT_REFERENCES_TABLE)
+    .select("component_master_id,reference")
+    .eq("version_id", versionId);
+
+  if (existingReferencesResult.error) {
+    throw new Error(existingReferencesResult.error.message);
+  }
+
+  try {
+    validateVersionComponentReferences({
+      componentId,
+      references,
+      existingReferences: existingReferencesResult.data ?? []
+    });
+  } catch (error) {
+    redirectVersionError(
+      versionId,
+      "bomImportError",
+      error instanceof Error ? error.message : "Could not update BOM references."
+    );
+  }
 
   for (const reference of references) {
     const result = await supabase.schema(PRIVATE_SCHEMA).from(COMPONENT_REFERENCES_TABLE).upsert(
@@ -167,6 +190,11 @@ export async function updateVersionComponentReferencesAction(formData: FormData)
   const versionId = requiredValue(formData.get("version_id"), "Version id");
   const componentId = requiredValue(formData.get("component_id"), "Component id");
   const references = normalizeReferencesInput(formData.get("references"));
+  const existingReferencesResult = await supabase
+    .schema(PRIVATE_SCHEMA)
+    .from(COMPONENT_REFERENCES_TABLE)
+    .select("component_master_id,reference")
+    .eq("version_id", versionId);
   const previous = await supabase
     .schema(PRIVATE_SCHEMA)
     .from(COMPONENT_REFERENCES_TABLE)
@@ -174,8 +202,26 @@ export async function updateVersionComponentReferencesAction(formData: FormData)
     .eq("version_id", versionId)
     .eq("component_master_id", componentId);
 
+  if (existingReferencesResult.error) {
+    throw new Error(existingReferencesResult.error.message);
+  }
+
   if (previous.error) {
     throw new Error(previous.error.message);
+  }
+
+  try {
+    validateVersionComponentReferences({
+      componentId,
+      references,
+      existingReferences: existingReferencesResult.data ?? []
+    });
+  } catch (error) {
+    redirectVersionError(
+      versionId,
+      "bomImportError",
+      error instanceof Error ? error.message : "Could not update BOM references."
+    );
   }
 
   const deleteResult = await supabase

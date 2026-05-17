@@ -10,10 +10,13 @@ export async function GET() {
   }
 
   const queries = await getRuntimeQueries();
-  const { shortages } = await queries.getPurchasingOverview();
+  const { productionShortages } = await queries.getPurchasingOverview();
 
   const csv = rowsToCsv(
-    shortages.map((item) => ({
+    productionShortages.flatMap((group) => group.items.map((item) => ({
+      product: group.product_name,
+      version: group.version_number,
+      build_quantity: group.build_quantity,
       sku: item.sku,
       component: item.name,
       category: item.category,
@@ -27,7 +30,7 @@ export async function GET() {
       lead_time: item.lead_time,
       seller_name: item.seller_name ?? "",
       seller_url: item.seller_product_url ?? item.seller_base_url ?? ""
-    }))
+    })))
   );
 
   return new NextResponse(csv, {

@@ -6,7 +6,8 @@ import {
   calculateVersionUnitCost,
   calculateWeightedAveragePrice,
   buildProductionShortageMetrics,
-  calculateProductionLongestLeadTime
+  calculateProductionLongestLeadTime,
+  buildPurchasingBuckets
 } from "../lib/mappers/mrp.ts";
 
 test("buildMrpRows calculates quantities and costs", () => {
@@ -206,9 +207,7 @@ test("buildMrpRows carries lead time through to results", () => {
   assert.equal(rows[0]?.leadTime, 21);
 });
 
-test("buildPurchasingBuckets separates shortages and near-safety components", async () => {
-  const { buildPurchasingBuckets } = await import("../lib/mappers/mrp.ts");
-
+test("buildPurchasingBuckets separates production-adjacent buckets", () => {
   const result = buildPurchasingBuckets([
     {
       id: "1",
@@ -248,11 +247,46 @@ test("buildPurchasingBuckets separates shortages and near-safety components", as
     }
   ]);
 
-  assert.equal(result.shortages.length, 1);
-  assert.equal(result.shortages[0]?.recommended_order_quantity, 32);
+  assert.equal(result.outOfStock.length, 0);
   assert.equal(result.nearSafety.length, 2);
   assert.equal(result.nearSafety[0]?.id, "1");
   assert.equal(result.nearSafety[1]?.id, "2");
+  assert.equal(result.outOfStock.length, 0);
+});
+
+test("buildPurchasingBuckets lists out-of-stock components separately from near-safety", () => {
+  const result = buildPurchasingBuckets([
+    {
+      id: "1",
+      sku: "IC-OUT",
+      name: "Out of stock IC",
+      category: "IC",
+      producer: "TI",
+      value: "ABC",
+      safety_stock: 25,
+      quantity_available: 0,
+      purchase_price: 1.5,
+      lead_time: 14
+    },
+    {
+      id: "2",
+      sku: "CAP-NEAR",
+      name: "Near stock cap",
+      category: "Capacitor",
+      producer: "Murata",
+      value: "10uF",
+      safety_stock: 20,
+      quantity_available: 26,
+      purchase_price: 0.2,
+      lead_time: 7
+    }
+  ]);
+
+  assert.equal(result.nearSafety.length, 1);
+  assert.equal(result.nearSafety[0]?.id, "2");
+  assert.equal(result.outOfStock.length, 1);
+  assert.equal(result.outOfStock[0]?.id, "1");
+  assert.equal(result.outOfStock[0]?.recommended_order_quantity, 50);
 });
 
 test("buildProductionShortageMetrics clears current shortage when available inventory now covers the stored net need", () => {

@@ -3,14 +3,14 @@ import { normalizeExternalUrl } from "@/lib/mappers/urls";
 import { updatePartSafetyStockAction, upsertPartSellerLinkAction } from "@/lib/runtime/actions";
 import { EmptyState, ModalTrigger, Panel } from "@/shared/ui";
 
-export function NearSafetyPanel(props: { items: PurchasingItem[] }) {
+export function OutOfStockPanel(props: { items: PurchasingItem[] }) {
   return (
     <Panel
-      title="Near safety"
-      description="Components with inventory above zero but below 1.5x safety stock, excluding active shortages."
+      title="Out of stock"
+      description="Components with zero inventory balance. Recommended order includes coverage back to safety stock."
     >
       {props.items.length === 0 ? (
-        <EmptyState>No components near safety stock.</EmptyState>
+        <EmptyState>No out-of-stock components.</EmptyState>
       ) : (
         <div className="table-wrap">
           <table>
@@ -20,6 +20,7 @@ export function NearSafetyPanel(props: { items: PurchasingItem[] }) {
                 <th>Category</th>
                 <th>Available</th>
                 <th>Safety stock</th>
+                <th>Recommended order</th>
                 <th>Lead time</th>
                 <th>Seller</th>
                 <th>Actions</th>
@@ -35,6 +36,7 @@ export function NearSafetyPanel(props: { items: PurchasingItem[] }) {
                   <td>{item.category}</td>
                   <td>{item.quantity_available}</td>
                   <td>{item.safety_stock}</td>
+                  <td>{item.recommended_order_quantity}</td>
                   <td>{item.lead_time ?? "-"}</td>
                   <td>
                     {normalizeExternalUrl(item.seller_product_url ?? item.seller_base_url) ? (
@@ -56,9 +58,9 @@ export function NearSafetyPanel(props: { items: PurchasingItem[] }) {
                         <form action={updatePartSafetyStockAction} className="stack">
                           <input type="hidden" name="id" value={item.id} />
                           <div className="field-group">
-                            <label htmlFor={`purchasing-safety-${item.id}`}>Safety stock</label>
+                            <label htmlFor={`out-of-stock-safety-${item.id}`}>Safety stock</label>
                             <input
-                              id={`purchasing-safety-${item.id}`}
+                              id={`out-of-stock-safety-${item.id}`}
                               className="input"
                               type="number"
                               min="0"
@@ -80,16 +82,16 @@ export function NearSafetyPanel(props: { items: PurchasingItem[] }) {
                             <input type="hidden" name="component_name" value={item.name} />
                             <input type="hidden" name="returnTo" value="/purchasing" />
                             <div className="field-group">
-                              <label htmlFor={`near-safety-base-url-${item.id}`}>Base URL</label>
-                              <input id={`near-safety-base-url-${item.id}`} className="input" name="base_url" defaultValue={item.seller_base_url ?? ""} />
+                              <label htmlFor={`out-of-stock-base-url-${item.id}`}>Base URL</label>
+                              <input id={`out-of-stock-base-url-${item.id}`} className="input" name="base_url" defaultValue={item.seller_base_url ?? ""} />
                             </div>
                             <div className="field-group">
-                              <label htmlFor={`near-safety-lead-time-${item.id}`}>Lead time</label>
-                              <input id={`near-safety-lead-time-${item.id}`} className="input" type="number" min="0" step="1" name="lead_time" defaultValue={item.lead_time ?? ""} />
+                              <label htmlFor={`out-of-stock-lead-time-${item.id}`}>Lead time</label>
+                              <input id={`out-of-stock-lead-time-${item.id}`} className="input" type="number" min="0" step="1" name="lead_time" defaultValue={item.lead_time ?? ""} />
                             </div>
                             <div className="field-group">
-                              <label htmlFor={`near-safety-product-url-${item.id}`}>Product URL</label>
-                              <input id={`near-safety-product-url-${item.id}`} className="input" name="product_url" defaultValue={item.seller_product_url ?? ""} />
+                              <label htmlFor={`out-of-stock-product-url-${item.id}`}>Product URL</label>
+                              <input id={`out-of-stock-product-url-${item.id}`} className="input" name="product_url" defaultValue={item.seller_product_url ?? ""} />
                             </div>
                             <button className="button primary" type="submit">
                               Save seller

@@ -1,6 +1,6 @@
 import type { SQLInputValue } from "node:sqlite";
 import { getStoredFileName, isImageFilePath } from "../../mappers/file-storage.ts";
-import { aggregateProductionRequirements, buildMrpRows, buildProductionShortageMetrics, calculateProductionLongestLeadTime } from "../../mappers/mrp.ts";
+import { buildMrpRows, buildPurchasingBuckets, calculateProductionLongestLeadTime } from "../../mappers/mrp.ts";
 import { summarizeReservedRequirements } from "../../mappers/production.ts";
 import type {
   AppSettings,
@@ -16,6 +16,7 @@ import type {
   ProductDetail,
   ProductListItem,
   ProductVersion,
+  ProductionShortageGroup,
   ProductionEntry,
   ProductionListItem,
   ProductionRequirement,
@@ -408,8 +409,9 @@ export async function getProductionOverview(): Promise<{
 }
 
 export async function getPurchasingOverview(): Promise<{
-  shortages: PurchasingItem[];
+  productionShortages: ProductionShortageGroup[];
   nearSafety: PurchasingItem[];
+  outOfStock: PurchasingItem[];
   error: string | null;
 }> {
   try {
@@ -427,6 +429,8 @@ export async function getPurchasingOverview(): Promise<{
     );
     const versions = getAllVersions();
     const versionMap = new Map(versions.map((version) => [version.id, version]));
+    const products = getAllProducts();
+    const productMap = new Map(products.map((product) => [product.id, product]));
     const activeEntryIds = new Set(activeEntries.map((entry) => entry.id));
 
     const sellerLinkMap = new Map<
@@ -466,149 +470,168 @@ export async function getPurchasingOverview(): Promise<{
       );
     }
 
-    const aggregatedRequirements = new Map<
-      string,
-      { totalGrossRequirement: number; totalNetRequirement: number; totalReservedInventory: number }
-    >();
+    const productionShortages: ProductionShortageGroup[] = [];
+    const productionShortageIds = new Set<string>();
 
     if (requirements.length > 0) {
-      for (const row of requirements.filter((item) => activeEntryIds.has(item.production_entry_id))) {
-        const existing = aggregatedRequirements.get(row.component_id);
-        if (existing) {
-          existing.totalGrossRequirement += row.gross_requirement;
-          existing.totalNetRequirement += row.net_requirement;
-          existing.totalReservedInventory += row.inventory_consumed;
-        } else {
-          aggregatedRequirements.set(row.component_id, {
-            totalGrossRequirement: row.gross_requirement,
-            totalNetRequirement: row.net_requirement,
-            totalReservedInventory: row.inventory_consumed
+      for (const entry of activeEntries) {
+        const version = versionMap.get(entry.version_id);
+        const product = version ? productMap.get(version.product_id) ?? null : null;
+        const items = requirements
+          .filter((item) => item.production_entry_id === entry.id && item.net_requirement > 0)
+          .map((item) => {
+            const component = components.find((candidate) => candidate.id === item.component_id);
+            if (!component) {
+              return null;
+            }
+            const sellerLink = sellerLinkMap.get(component.id);
+            productionShortageIds.add(component.id);
+            return {
+              id: component.id,
+              sku: component.sku,
+              name: component.name,
+              category: component.category,
+              producer: component.producer,
+              value: component.value,
+              safety_stock: component.safety_stock,
+              gross_requirement: item.gross_requirement,
+              reserved_inventory: item.inventory_consumed,
+              quantity_available: inventoryMap.get(component.id)?.quantity_available ?? 0,
+              purchase_price: inventoryMap.get(component.id)?.purchase_price ?? null,
+              lead_time: leadTimeMap.get(component.id) ?? null,
+              net_need: item.net_requirement,
+              seller_id: sellerLink?.seller_id ?? null,
+              seller_name: sellerLink?.seller_name ?? null,
+              seller_base_url: sellerLink?.seller_base_url ?? null,
+              seller_product_url: sellerLink?.seller_product_url ?? null,
+              recommended_order_quantity: item.net_requirement + component.safety_stock,
+              production_entry_id: entry.id,
+              product_name: product?.name ?? "Unknown product",
+              version_number: version?.version_number ?? "-",
+              build_quantity: entry.quantity
+            };
+          })
+          .filter((row): row is NonNullable<typeof row> => row !== null)
+          .sort((left, right) => right.net_need - left.net_need);
+
+        if (items.length > 0) {
+          productionShortages.push({
+            production_entry_id: entry.id,
+            product_name: product?.name ?? "Unknown product",
+            version_number: version?.version_number ?? "-",
+            build_quantity: entry.quantity,
+            label: `${product?.name ?? "Unknown product"} - ${entry.quantity} pcs`,
+            items
           });
         }
       }
     } else if (activeEntries.length > 0) {
-      const productionRows = await Promise.all(
-        activeEntries.map(async (entry) => {
-          const version = versionMap.get(entry.version_id);
-          if (!version) {
-            return [];
-          }
+      for (const entry of activeEntries) {
+        const version = versionMap.get(entry.version_id);
+        const product = version ? productMap.get(version.product_id) ?? null : null;
+        const versionDetail = await getVersionDetail(entry.version_id);
+        const items = (versionDetail.item?.components ?? [])
+          .map((component) => {
+            const grossRequirement = component.quantity * entry.quantity;
+            const quantityAvailable = component.inventory?.quantity_available ?? 0;
+            const netNeed = Math.max(grossRequirement - quantityAvailable, 0);
+            if (netNeed <= 0) {
+              return null;
+            }
+            const sellerLink = sellerLinkMap.get(component.component.id);
+            productionShortageIds.add(component.component.id);
+            return {
+              id: component.component.id,
+              sku: component.component.sku,
+              name: component.component.name,
+              category: component.component.category,
+              producer: component.component.producer,
+              value: component.component.value,
+              safety_stock: component.component.safety_stock,
+              gross_requirement: grossRequirement,
+              reserved_inventory: grossRequirement - netNeed,
+              quantity_available: quantityAvailable,
+              purchase_price: component.inventory?.purchase_price ?? null,
+              lead_time: component.lead_time ?? null,
+              net_need: netNeed,
+              seller_id: sellerLink?.seller_id ?? null,
+              seller_name: sellerLink?.seller_name ?? null,
+              seller_base_url: sellerLink?.seller_base_url ?? null,
+              seller_product_url: sellerLink?.seller_product_url ?? null,
+              recommended_order_quantity: netNeed + component.component.safety_stock,
+              production_entry_id: entry.id,
+              product_name: product?.name ?? "Unknown product",
+              version_number: version?.version_number ?? "-",
+              build_quantity: entry.quantity
+            };
+          })
+          .filter((row): row is NonNullable<typeof row> => row !== null)
+          .sort((left, right) => right.net_need - left.net_need);
 
-          const versionDetail = await getVersionDetail(entry.version_id);
-          return versionDetail.item
-            ? versionDetail.item.components.map((component) => ({
-                componentId: component.component.id,
-                sku: component.component.sku,
-                componentName: component.component.name,
-                category: component.component.category,
-                producer: component.component.producer,
-                value: component.component.value,
-                references: component.references,
-                quantityPerProduct: component.quantity,
-                buildQuantity: entry.quantity,
-                safetyStock: component.component.safety_stock,
-                leadTime: component.lead_time,
-                availableInventory: component.inventory?.quantity_available ?? 0,
-                unitPrice: component.inventory?.purchase_price ?? null,
-                grossRequirement: component.quantity * entry.quantity,
-                netRequirement: 0,
-                grossCost: null,
-                netCost: null,
-                reservedForThisCalculation: 0,
-                reservedForEntry: null
-              }))
-            : [];
-        })
-      );
-
-      for (const item of aggregateProductionRequirements(productionRows.flat())) {
-        aggregatedRequirements.set(item.componentId, {
-          totalGrossRequirement: item.totalGrossRequirement,
-          totalNetRequirement: item.totalNetRequirement,
-          totalReservedInventory: item.totalGrossRequirement - item.totalNetRequirement
-        });
+        if (items.length > 0) {
+          productionShortages.push({
+            production_entry_id: entry.id,
+            product_name: product?.name ?? "Unknown product",
+            version_number: version?.version_number ?? "-",
+            build_quantity: entry.quantity,
+            label: `${product?.name ?? "Unknown product"} - ${entry.quantity} pcs`,
+            items
+          });
+        }
       }
     }
 
-    const shortageIds = new Set<string>();
-    const shortageCandidates = Array.from(aggregatedRequirements.entries())
-      .map(([componentId, totals]) => {
-        const component = components.find((item) => item.id === componentId);
-        if (!component) {
-          return null;
-        }
+    productionShortages.sort((left, right) =>
+      left.product_name.localeCompare(right.product_name)
+      || left.build_quantity - right.build_quantity
+      || left.version_number.localeCompare(right.version_number)
+    );
 
-        const sellerLink = sellerLinkMap.get(componentId);
-        const metrics = buildProductionShortageMetrics({
-          totalGrossRequirement: totals.totalGrossRequirement,
-          totalNetRequirement: totals.totalNetRequirement,
-          availableInventory: inventoryMap.get(componentId)?.quantity_available ?? 0,
-          safetyStock: component.safety_stock
-        });
-
-        return {
-          id: component.id,
-          sku: component.sku,
-          name: component.name,
-          category: component.category,
-          producer: component.producer,
-          value: component.value,
-          safety_stock: component.safety_stock,
-          gross_requirement: totals.totalGrossRequirement,
-          reserved_inventory: totals.totalReservedInventory,
-          quantity_available: inventoryMap.get(componentId)?.quantity_available ?? 0,
-          purchase_price: inventoryMap.get(componentId)?.purchase_price ?? null,
-          lead_time: leadTimeMap.get(componentId) ?? null,
-          net_need: metrics.netNeed,
-          seller_id: sellerLink?.seller_id ?? null,
-          seller_name: sellerLink?.seller_name ?? null,
-          seller_base_url: sellerLink?.seller_base_url ?? null,
-          seller_product_url: sellerLink?.seller_product_url ?? null,
-          recommended_order_quantity: metrics.recommendedOrderQuantity
-        };
-      })
-      .filter((item): item is NonNullable<typeof item> => item !== null)
-      .filter((item) => item.net_need > 0);
-
-    const shortages: PurchasingItem[] = shortageCandidates
-      .sort((left, right) => right.net_need - left.net_need);
-
-    for (const item of shortages) {
-      shortageIds.add(item.id);
-    }
-
-    const nearSafety: PurchasingItem[] = components
-      .map((component) => {
+    const buckets = buildPurchasingBuckets(
+      components.map((component) => {
         const itemInventory = inventoryMap.get(component.id);
         const sellerLink = sellerLinkMap.get(component.id);
-        const quantityAvailable = itemInventory?.quantity_available ?? 0;
-
         return {
           ...component,
-          gross_requirement: 0,
-          reserved_inventory: 0,
-          quantity_available: quantityAvailable,
+          quantity_available: itemInventory?.quantity_available ?? 0,
           purchase_price: itemInventory?.purchase_price ?? null,
           lead_time: leadTimeMap.get(component.id) ?? null,
-          net_need: 0,
           seller_id: sellerLink?.seller_id ?? null,
           seller_name: sellerLink?.seller_name ?? null,
           seller_base_url: sellerLink?.seller_base_url ?? null,
-          seller_product_url: sellerLink?.seller_product_url ?? null,
-          recommended_order_quantity: 0
+          seller_product_url: sellerLink?.seller_product_url ?? null
         };
       })
-      .filter((item) => !shortageIds.has(item.id))
-      .filter((item) => item.quantity_available > 0 && item.quantity_available < item.safety_stock * 1.5)
+    );
+
+    const nearSafety: PurchasingItem[] = buckets.nearSafety
+      .map((component) => ({
+        ...component,
+        gross_requirement: 0,
+        reserved_inventory: 0,
+        net_need: 0,
+        recommended_order_quantity: 0
+      }))
+      .filter((item) => !productionShortageIds.has(item.id))
       .sort((left, right) => left.quantity_available - right.quantity_available);
 
+    const outOfStock: PurchasingItem[] = buckets.outOfStock
+      .map((component) => ({
+        ...component,
+        gross_requirement: 0,
+        reserved_inventory: 0,
+        net_need: 0
+      }))
+      .sort((left, right) => left.name.localeCompare(right.name));
+
     return {
-      shortages,
+      productionShortages,
       nearSafety,
+      outOfStock,
       error: null
     };
   } catch (error) {
-    return { shortages: [], nearSafety: [], error: getErrorMessage(error) };
+    return { productionShortages: [], nearSafety: [], outOfStock: [], error: getErrorMessage(error) };
   }
 }
 

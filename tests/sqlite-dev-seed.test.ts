@@ -38,8 +38,10 @@ test("seedSqliteDevDatabase builds a realistic non-empty desktop dataset", async
   assert.equal(production.underProduction.length >= 1, true);
 
   assert.equal(purchasing.error, null);
-  assert.equal(purchasing.shortages.length >= 1, true);
+  assert.equal(purchasing.productionShortages.length >= 1, true);
+  assert.equal(purchasing.productionShortages[0]?.items.length >= 1, true);
   assert.equal(purchasing.nearSafety.length >= 1, true);
+  assert.equal(purchasing.outOfStock.length >= 1, true);
 
   assert.equal(history.error, null);
   assert.equal(history.items.length >= 1, true);

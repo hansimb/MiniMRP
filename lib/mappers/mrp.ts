@@ -157,8 +157,8 @@ export function buildPurchasingBuckets<T extends {
   purchase_price: number | null;
   lead_time: number | null;
 }>(items: T[]) {
-  const shortages = items
-    .filter((item) => item.quantity_available < item.safety_stock)
+  const outOfStock = items
+    .filter((item) => item.quantity_available <= 0)
     .map((item) => ({
       ...item,
       recommended_order_quantity:
@@ -169,6 +169,7 @@ export function buildPurchasingBuckets<T extends {
   const nearSafety = items
     .filter(
       (item) =>
+        item.quantity_available > 0 &&
         item.quantity_available <= item.safety_stock + 10
     )
     .map((item) => ({
@@ -177,7 +178,7 @@ export function buildPurchasingBuckets<T extends {
     }))
     .sort((left, right) => left.quantity_available - right.quantity_available);
 
-  return { shortages, nearSafety };
+  return { nearSafety, outOfStock };
 }
 
 export interface ProductionRequirementItem {

@@ -5,6 +5,7 @@ import { buildMrpRows, reserveInventoryForProduction } from "../../mappers/mrp.t
 import { consumeInventoryLotsFifo } from "../../mappers/inventory-lots.ts";
 import { planProductionCompletionConsumption } from "../../mappers/production.ts";
 import { normalizeExternalUrl } from "../../mappers/urls.ts";
+import { normalizeReferencesInput, validateVersionComponentReferences } from "../../mappers/bom.ts";
 import { buildVersionBomReferenceRows, normalizeVersionBomRows, parseVersionBomFile } from "../../import/version-bom.ts";
 import { normalizeMasterDataRows, parseSpreadsheetFile } from "../../import/master-data.ts";
 import { getVersionDetail } from "./queries.ts";
@@ -48,15 +49,6 @@ function parsePositiveNumber(value: FormDataEntryValue | null, field: string) {
     throw new Error(`${field} must be greater than zero.`);
   }
   return parsed;
-}
-
-function normalizeReferencesInput(value: FormDataEntryValue | null) {
-  const text = String(value ?? "")
-    .split(",")
-    .map((item) => item.trim())
-    .filter(Boolean);
-
-  return text.length > 0 ? text : ["-"];
 }
 
 function revalidateAppViews(paths: string[]) {
@@ -308,6 +300,20 @@ export async function attachPartToVersionAction(formData: FormData) {
   const versionId = requiredValue(formData.get("version_id"), "Version id");
   const componentId = requiredValue(formData.get("component_id"), "Component id");
   const references = normalizeReferencesInput(formData.get("references"));
+  const existingReferences = getRows<{ component_master_id: string; reference: string }>(
+    "select component_master_id, reference from component_references where version_id = :version_id",
+    { version_id: versionId }
+  );
+
+  try {
+    validateVersionComponentReferences({
+      componentId,
+      references,
+      existingReferences
+    });
+  } catch (error) {
+    redirect(`/versions/${versionId}?bomImportError=${encodeURIComponent(error instanceof Error ? error.message : "Could not update BOM references.")}`);
+  }
 
   for (const reference of references) {
     run(
@@ -366,10 +372,24 @@ export async function updateVersionComponentReferencesAction(formData: FormData)
   const versionId = requiredValue(formData.get("version_id"), "Version id");
   const componentId = requiredValue(formData.get("component_id"), "Component id");
   const references = normalizeReferencesInput(formData.get("references"));
+  const existingReferences = getRows<{ component_master_id: string; reference: string }>(
+    "select component_master_id, reference from component_references where version_id = :version_id",
+    { version_id: versionId }
+  );
   const previous = getRows<{ version_id: string; component_master_id: string; reference: string }>(
     "select version_id, component_master_id, reference from component_references where version_id = :version_id and component_master_id = :component_id",
     { version_id: versionId, component_id: componentId }
   );
+
+  try {
+    validateVersionComponentReferences({
+      componentId,
+      references,
+      existingReferences
+    });
+  } catch (error) {
+    redirect(`/versions/${versionId}?bomImportError=${encodeURIComponent(error instanceof Error ? error.message : "Could not update BOM references.")}`);
+  }
 
   run(
     "delete from component_references where version_id = :version_id and component_master_id = :component_id",
