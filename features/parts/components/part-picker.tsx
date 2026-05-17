@@ -1,33 +1,38 @@
 "use client";
 
 import { useState } from "react";
-
-interface PickerPart {
-  id: string;
-  name: string;
-  category: string;
-  value: string | null;
-}
+import {
+  buildPartPickerState,
+  type PickerPart
+} from "@/features/parts/components/part-picker-state";
 
 export function PartPicker(props: {
   parts: PickerPart[];
   categoryFieldId?: string;
+  componentNameFieldId?: string;
+  producerFieldId?: string;
   componentFieldId?: string;
   componentFieldName?: string;
   componentLabel?: string;
   required?: boolean;
 }) {
   const [category, setCategory] = useState("all");
+  const [componentName, setComponentName] = useState("");
+  const [producer, setProducer] = useState("");
+  const [componentId, setComponentId] = useState("");
   const categoryFieldId = props.categoryFieldId ?? "part-category-filter";
+  const componentNameFieldId = props.componentNameFieldId ?? "part-name-filter";
+  const producerFieldId = props.producerFieldId ?? "part-producer-filter";
   const componentFieldId = props.componentFieldId ?? "part-id";
   const componentFieldName = props.componentFieldName ?? "component_id";
   const componentLabel = props.componentLabel ?? "Component";
   const isRequired = props.required ?? true;
-
-  const categories = Array.from(new Set(props.parts.map((part) => part.category))).sort();
-  const filteredParts = props.parts.filter((part) =>
-    category === "all" ? true : part.category === category
-  );
+  const state = buildPartPickerState(props.parts, {
+    category,
+    componentName,
+    producer,
+    componentId
+  });
 
   return (
     <>
@@ -37,10 +42,15 @@ export function PartPicker(props: {
           id={categoryFieldId}
           className="select"
           value={category}
-          onChange={(event) => setCategory(event.target.value)}
+          onChange={(event) => {
+            setCategory(event.target.value);
+            setComponentName("");
+            setProducer("");
+            setComponentId("");
+          }}
         >
           <option value="all">All categories</option>
-          {categories.map((item) => (
+          {state.categories.map((item) => (
             <option key={item} value={item}>
               {item}
             </option>
@@ -48,24 +58,55 @@ export function PartPicker(props: {
         </select>
       </div>
       <div className="field-group">
-        <label htmlFor={componentFieldId}>{componentLabel}</label>
+        <label htmlFor={componentNameFieldId}>{componentLabel}</label>
         <select
-          id={componentFieldId}
+          id={componentNameFieldId}
           className="select"
-          name={componentFieldName}
-          defaultValue=""
+          value={state.selectedComponentName}
           required={isRequired}
+          disabled={state.componentOptions.length <= 1}
+          onChange={(event) => {
+            setComponentName(event.target.value);
+            setProducer("");
+            setComponentId("");
+          }}
         >
-          <option value="" disabled>
-            Select component
-          </option>
-          {filteredParts.map((part) => (
-            <option key={part.id} value={part.id}>
-              {part.name} - {part.category} - {part.value ?? "-"}
+          <option value="">All components</option>
+          {state.componentOptions.map((item) => (
+            <option key={item} value={item}>
+              {item}
             </option>
           ))}
         </select>
       </div>
+      <div className="field-group">
+        <label htmlFor={producerFieldId}>Producer</label>
+        <select
+          id={producerFieldId}
+          className="select"
+          value={state.selectedProducer}
+          required={isRequired}
+          disabled={state.producerOptions.length <= 1}
+          onChange={(event) => {
+            setProducer(event.target.value);
+            setComponentId("");
+          }}
+        >
+          <option value="">All producers</option>
+          {state.producerOptions.map((item) => (
+            <option key={item} value={item}>
+              {item}
+            </option>
+          ))}
+        </select>
+      </div>
+      <input
+        id={componentFieldId}
+        type="hidden"
+        name={componentFieldName}
+        value={state.selectedComponentId}
+        onChange={(event) => setComponentId(event.target.value)}
+      />
     </>
   );
 }
