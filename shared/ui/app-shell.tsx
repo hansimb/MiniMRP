@@ -4,6 +4,7 @@ import { AgenticFixLoop } from "@hansimb/fix-loop-widget";
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { startTransition, type ReactNode } from "react";
+import packageJson from "../../package.json";
 import { createRuntimeBrowserClient } from "@/lib/runtime/browser-client";
 import { getPostLogoutRedirectPath } from "@/lib/auth/redirects";
 import { getBrowserRuntimeMode } from "@/lib/runtime/env";
@@ -37,6 +38,7 @@ export function AppShell({
     <div className="shell">
       <aside className="sidebar">
         <h1>MiniMRP</h1>
+        <p className="small muted">Version {packageJson.version}</p>
         <p>Internal component, BOM and inventory management for SAI.</p>
         <nav className="nav">
           {navigation.map((item) => (

@@ -7,6 +7,7 @@ import type {
   InventoryItem,
   ProductDetail,
   ProductListItem,
+  ProductionShortageGroup,
   ProductionListItem,
   PurchasingItem,
   VersionDetail
@@ -29,8 +30,9 @@ export interface RuntimeQueries {
     completed: ProductionListItem[];
   }>;
   getPurchasingOverview: () => RuntimeResult<{
-    shortages: PurchasingItem[];
+    productionShortages: ProductionShortageGroup[];
     nearSafety: PurchasingItem[];
+    outOfStock: PurchasingItem[];
   }>;
   getAppSettings: () => RuntimeResult<{ item: AppSettings | null }>;
   getVersionDetail: (id: string, options?: { productionEntryId?: string | null }) => RuntimeResult<{

@@ -43,8 +43,9 @@ test("sqlite runtime exposes empty shared view shapes on a fresh database", asyn
   assert.deepEqual(inventory.items, []);
   assert.deepEqual(production.underProduction, []);
   assert.deepEqual(production.completed, []);
-  assert.deepEqual(purchasing.shortages, []);
+  assert.deepEqual(purchasing.productionShortages, []);
   assert.deepEqual(purchasing.nearSafety, []);
+  assert.deepEqual(purchasing.outOfStock, []);
   assert.deepEqual(history.items, []);
   assert.deepEqual(settings.item, { id: true, default_safety_stock: 25 });
 });

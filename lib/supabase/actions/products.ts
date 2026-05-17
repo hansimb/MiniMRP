@@ -66,6 +66,7 @@ export async function createVersionAction(formData: FormData) {
     new_value: stringifyHistoryValue({ id: result.data.id, product_id: productId, version_number: versionNumber })
   });
 
+  revalidatePath("/products");
   revalidatePath(`/products/${productId}`);
   redirect(`/products/${productId}`);
 }
@@ -127,9 +128,25 @@ export async function deleteProductAction(formData: FormData) {
     redirectProductDeleteError(id, "Cannot delete product while versions still exist.");
   }
 
-  const productionResult = await supabase
-    .from("production_entries")
-    .select("id", { count: "exact", head: true });
+  const versionIdsResult = await supabase
+    .schema(PRIVATE_SCHEMA)
+    .from(PRODUCT_VERSIONS_TABLE)
+    .select("id")
+    .eq("product_id", id);
+
+  if (versionIdsResult.error) {
+    throw new Error(versionIdsResult.error.message);
+  }
+
+  const versionIds = versionIdsResult.data.map((row) => row.id);
+
+  const productionResult =
+    versionIds.length > 0
+      ? await supabase
+          .from("production_entries")
+          .select("id", { count: "exact", head: true })
+          .in("version_id", versionIds)
+      : { count: 0, error: null };
 
   if (productionResult.error) {
     throw new Error(productionResult.error.message);

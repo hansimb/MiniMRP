@@ -24,9 +24,11 @@ export function InventoryRowsPanel(props: {
                 id: part.id,
                 name: part.name,
                 category: part.category,
+                producer: part.producer,
                 value: part.value
               }))}
               categoryFieldId="inventory-part-category-filter"
+              producerFieldId="inventory-part-producer-filter"
               componentFieldId="inventory-component"
             />
             <div className="field-group">
@@ -99,7 +101,7 @@ export function InventoryRowsPanel(props: {
                           formId={`inventory-adjust-${item.id}`}
                         />
                       </ModalTrigger>
-                      <ModalTrigger buttonLabel="Edit" title={`Update settings: ${item.component?.name ?? item.id}`}>
+                      <ModalTrigger buttonLabel="Safety stock" title={`Update settings: ${item.component?.name ?? item.id}`}>
                         <InventoryEditForm
                           inventoryId={item.id}
                           componentId={item.component_id}

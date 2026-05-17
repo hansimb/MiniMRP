@@ -485,6 +485,68 @@ th {
   background: var(--panel-soft);
 }
 
+.production-shortage-groups {
+  display: grid;
+  gap: 16px;
+}
+
+.production-shortage-card {
+  display: grid;
+  gap: 10px;
+  padding: 14px;
+  border: 1px solid var(--line);
+  border-radius: 14px;
+  background:
+    linear-gradient(180deg, var(--accent-soft) 0, var(--accent-soft) 64px, var(--panel-soft) 64px, var(--panel-soft) 100%);
+}
+
+.production-shortage-card-head {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: space-between;
+  gap: 12px;
+  align-items: flex-start;
+}
+
+.production-shortage-card-titleblock {
+  display: grid;
+  gap: 4px;
+}
+
+.production-shortage-card-title {
+  font-size: 1.02rem;
+}
+
+.production-shortage-card-meta {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.production-shortage-card-subhead {
+  padding-bottom: 2px;
+}
+
+.production-shortage-table-wrap {
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  background: var(--panel);
+}
+
+.production-shortage-table-wrap table {
+  background: transparent;
+}
+
+.production-shortage-table-wrap th:first-child,
+.production-shortage-table-wrap td:first-child {
+  padding-left: 16px;
+}
+
+.production-shortage-table-wrap th:last-child,
+.production-shortage-table-wrap td:last-child {
+  padding-right: 16px;
+}
+
 .attachment-preview {
   min-height: 140px;
 }

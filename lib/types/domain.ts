@@ -155,6 +155,22 @@ export interface PurchasingItem extends ComponentMaster {
   recommended_order_quantity: number;
 }
 
+export interface ProductionShortageItem extends PurchasingItem {
+  production_entry_id: string;
+  product_name: string;
+  version_number: string;
+  build_quantity: number;
+}
+
+export interface ProductionShortageGroup {
+  production_entry_id: string;
+  product_name: string;
+  version_number: string;
+  build_quantity: number;
+  label: string;
+  items: ProductionShortageItem[];
+}
+
 export interface ProductionEntry {
   id: string;
   version_id: string;

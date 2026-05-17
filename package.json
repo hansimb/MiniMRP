@@ -1,6 +1,6 @@
 {
   "name": "minimrp",
-  "version": "0.1.5",
+  "version": "0.1.6",
   "private": true,
   "type": "module",
   "main": "desktop/electron/packaged-main.mjs",
@@ -16,6 +16,7 @@
     "lint": "next lint",
     "typecheck": "tsc --noEmit",
     "test": "node --experimental-strip-types --test --test-isolation=none tests/*.test.ts",
+    "db:reset:seed": "node --experimental-strip-types scripts/reset-seed-desktop-sqlite.ts",
     "fixloop:pull": "node --env-file=.env.development ./node_modules/@hansimb/fix-loop-cli/dist/index.js pull"
   },
   "dependencies": {

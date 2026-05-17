@@ -26,6 +26,7 @@ export function VersionPartsPanel(props: {
                 id: part.id,
                 name: part.name,
                 category: part.category,
+                producer: part.producer,
                 value: part.value
               }))}
             />
