@@ -90,7 +90,15 @@ export function buildMrpRows(components: VersionComponent[], buildQuantity: numb
     const reservedForThisCalculation =
       entryReservedQuantity !== null ? entryReservedQuantity : Math.min(availableInventory, grossRequirement);
     const reservedForEntry = entryReservedQuantity;
-    const reservedCostForEntry = row.reserved?.entry_inventory_consumed_cost ?? null;
+    const rawReservedCostForEntry = row.reserved?.entry_inventory_consumed_cost ?? null;
+    const reservedCostForEntry =
+      reservedForEntry !== null && reservedForEntry > 0
+        ? rawReservedCostForEntry !== null && rawReservedCostForEntry > 0
+          ? rawReservedCostForEntry
+          : unitPrice === null
+            ? null
+            : roundCurrency(reservedForEntry * unitPrice)
+        : rawReservedCostForEntry;
     const unreservedGrossRequirement = Math.max(grossRequirement - (reservedForEntry ?? 0), 0);
     const grossCost =
       reservedCostForEntry !== null
