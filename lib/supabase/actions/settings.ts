@@ -2,6 +2,7 @@
 
 import { requireAdminAction } from "@/lib/auth/require-admin";
 import { parseSpreadsheetFile, normalizeMasterDataRows } from "@/lib/import/master-data";
+import { getColumnSetupErrorMessage } from "@/lib/mappers/supabase-errors";
 import { syncInventorySummariesForComponents } from "./inventory-summary";
 import { createSupabaseAdminClient } from "../admin-client";
 import { APP_SETTINGS_TABLE, INVENTORY_LOTS_TABLE, PRIVATE_SCHEMA } from "../table-names";
@@ -11,36 +12,49 @@ export async function updateDefaultSafetyStockAction(formData: FormData) {
   await requireAdminAction("/settings");
   const supabase = createSupabaseAdminClient();
   const value = Number(requiredValue(formData.get("default_safety_stock"), "Default safety stock"));
+  const thresholdPercent = Number(
+    requiredValue(formData.get("near_safety_threshold_percent"), "Near safety threshold")
+  );
   const previous = await supabase
     .schema(PRIVATE_SCHEMA)
     .from(APP_SETTINGS_TABLE)
-    .select("id,default_safety_stock")
+    .select("id,default_safety_stock,near_safety_threshold_percent")
     .eq("id", true)
     .maybeSingle();
 
   if (previous.error) {
-    throw new Error(previous.error.message);
+    throw new Error(
+      getColumnSetupErrorMessage(previous.error.message, APP_SETTINGS_TABLE, "near_safety_threshold_percent")
+    );
   }
 
   const result = await supabase.schema(PRIVATE_SCHEMA).from(APP_SETTINGS_TABLE).upsert({
     id: true,
-    default_safety_stock: value
+    default_safety_stock: value,
+    near_safety_threshold_percent: thresholdPercent
   });
 
   if (result.error) {
-    throw new Error(result.error.message);
+    throw new Error(
+      getColumnSetupErrorMessage(result.error.message, APP_SETTINGS_TABLE, "near_safety_threshold_percent")
+    );
   }
 
   await recordHistory({
     entity_type: "settings",
     entity_id: "app_settings",
     action_type: "update",
-    summary: `Updated default safety stock to ${value}`,
+    summary: `Updated default safety stock to ${value} and near safety threshold to ${thresholdPercent}%`,
     old_value: stringifyHistoryValue(previous.data),
-    new_value: stringifyHistoryValue({ id: true, default_safety_stock: value })
+    new_value: stringifyHistoryValue({
+      id: true,
+      default_safety_stock: value,
+      near_safety_threshold_percent: thresholdPercent
+    })
   });
 
   revalidatePath("/components");
+  revalidatePath("/purchasing");
   revalidatePath("/settings");
   redirect("/settings");
 }

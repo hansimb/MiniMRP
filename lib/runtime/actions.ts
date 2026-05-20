@@ -7,7 +7,7 @@ async function getRuntimeActionsModule(): Promise<RuntimeActions> {
   const runtimeMode = getRuntimeMode();
 
   if (runtimeMode === "sqlite") {
-    return (await import(`./${runtimeMode}/actions.ts`)) as RuntimeActions;
+    return (await import("./sqlite/actions.ts")) as RuntimeActions;
   }
 
   return (await import("./supabase/actions.ts")) as RuntimeActions;

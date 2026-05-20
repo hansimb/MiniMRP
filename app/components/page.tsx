@@ -3,6 +3,8 @@ import { PartsListPanel } from "@/features/parts/components/parts-list-panel";
 import { getRuntimeQueries } from "@/lib/runtime";
 import { Notice, PageHeader } from "@/shared/ui";
 
+export const dynamic = "force-dynamic";
+
 export default async function ComponentsPage(props: {
   searchParams?: Promise<{ category?: string; search?: string }>;
 }) {

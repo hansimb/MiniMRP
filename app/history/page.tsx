@@ -1,6 +1,8 @@
 import { EmptyState, Notice, PageHeader, Panel } from "@/shared/ui";
 import { getRuntimeQueries } from "@/lib/runtime";
 
+export const dynamic = "force-dynamic";
+
 export default async function HistoryPage() {
   const queries = await getRuntimeQueries();
   const { items, error } = await queries.getHistoryEntries();

@@ -30,7 +30,8 @@ create table if not exists private.history_events (
 
 create table if not exists private.app_settings (
   id boolean primary key default true check (id = true),
-  default_safety_stock integer not null default 25
+  default_safety_stock integer not null default 25,
+  near_safety_threshold_percent integer not null default 10
 );
 
 create table if not exists private.user_roles (

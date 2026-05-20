@@ -5,6 +5,7 @@ export interface ReservedRequirementInput {
   component_id: string;
   gross_requirement: number;
   inventory_consumed: number;
+  inventory_consumed_cost?: number;
   net_requirement: number;
   quantity: number;
 }
@@ -12,6 +13,7 @@ export interface ReservedRequirementInput {
 export interface ReservedRequirementSummary {
   grossRequirement: number;
   inventoryConsumed: number;
+  inventoryConsumedCost: number;
   netRequirement: number;
   activeProductionQuantity: number;
   activeEntryCount: number;
@@ -32,7 +34,12 @@ export function planProductionCompletionConsumption(input: {
 }) {
   const missing: Array<{ componentId: string; componentName: string; missingQuantity: number }> = [];
   const lotUpdates: InventoryLot[] = [];
-  const requirementUpdates: Array<{ id: string; inventory_consumed: number; net_requirement: number }> = [];
+  const requirementUpdates: Array<{
+    id: string;
+    inventory_consumed: number;
+    inventory_consumed_cost: number;
+    net_requirement: number;
+  }> = [];
   const affectedComponentIds = new Set<string>();
 
   for (const requirement of input.requirements) {
@@ -63,6 +70,7 @@ export function planProductionCompletionConsumption(input: {
     requirementUpdates.push({
       id: requirement.id,
       inventory_consumed: requirement.inventory_consumed + consumption.inventoryConsumed,
+      inventory_consumed_cost: consumption.consumedValue,
       net_requirement: 0
     });
   }
@@ -91,6 +99,7 @@ export function summarizeReservedRequirements(items: ReservedRequirementInput[])
     if (existing) {
       existing.grossRequirement += item.gross_requirement;
       existing.inventoryConsumed += item.inventory_consumed;
+      existing.inventoryConsumedCost += item.inventory_consumed_cost ?? 0;
       existing.netRequirement += item.net_requirement;
       existing.activeProductionQuantity += item.quantity;
       existing.activeEntryCount += 1;
@@ -100,6 +109,7 @@ export function summarizeReservedRequirements(items: ReservedRequirementInput[])
     summary[item.component_id] = {
       grossRequirement: item.gross_requirement,
       inventoryConsumed: item.inventory_consumed,
+      inventoryConsumedCost: item.inventory_consumed_cost ?? 0,
       netRequirement: item.net_requirement,
       activeProductionQuantity: item.quantity,
       activeEntryCount: 1

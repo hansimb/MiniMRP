@@ -177,6 +177,7 @@ async function startEmbeddedServer() {
   process.env.NODE_ENV = "production";
   process.env.PORT = String(port);
   process.env.HOSTNAME = "127.0.0.1";
+  process.env.MINIMRP_DESKTOP_RUNTIME = "1";
   process.env.MINIMRP_RUNTIME = "sqlite";
   process.env.NEXT_PUBLIC_MINIMRP_RUNTIME = "sqlite";
 

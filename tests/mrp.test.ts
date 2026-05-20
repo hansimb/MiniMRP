@@ -79,6 +79,7 @@ test("buildMrpRows calculates all MRP values for out-of-stock parts when a unit 
   assert.equal(rows[0]?.leadTime, 7);
   assert.equal(rows[0]?.availableInventory, 0);
   assert.equal(rows[0]?.unitPrice, 0.125);
+  assert.equal(rows[0]?.unitPriceIsEstimate, true);
   assert.equal(rows[0]?.grossRequirement, 12);
   assert.equal(rows[0]?.netRequirement, 12);
   assert.equal(rows[0]?.reservedForThisCalculation, 0);
@@ -133,6 +134,7 @@ test("summarizeMrpRows returns totals for numeric columns", () => {
       leadTime: 7,
       availableInventory: 3,
       unitPrice: 1.5,
+      unitPriceIsEstimate: false,
       grossRequirement: 10,
       netRequirement: 7,
       grossCost: 15,
@@ -155,6 +157,7 @@ test("summarizeMrpRows returns totals for numeric columns", () => {
       leadTime: 14,
       availableInventory: 6,
       unitPrice: 2,
+      unitPriceIsEstimate: false,
       grossRequirement: 5,
       netRequirement: 0,
       grossCost: 10,
@@ -205,6 +208,7 @@ test("buildMrpRows carries lead time through to results", () => {
 
   assert.equal(rows[0]?.netRequirement, 2);
   assert.equal(rows[0]?.leadTime, 21);
+  assert.equal(rows[0]?.unitPriceIsEstimate, false);
 });
 
 test("buildPurchasingBuckets separates production-adjacent buckets", () => {
@@ -245,7 +249,7 @@ test("buildPurchasingBuckets separates production-adjacent buckets", () => {
       purchase_price: 0.01,
       lead_time: 5
     }
-  ]);
+  ], { nearSafetyThresholdPercent: 30 });
 
   assert.equal(result.outOfStock.length, 0);
   assert.equal(result.nearSafety.length, 2);
@@ -280,13 +284,45 @@ test("buildPurchasingBuckets lists out-of-stock components separately from near-
       purchase_price: 0.2,
       lead_time: 7
     }
-  ]);
+  ], { nearSafetyThresholdPercent: 30 });
 
   assert.equal(result.nearSafety.length, 1);
   assert.equal(result.nearSafety[0]?.id, "2");
   assert.equal(result.outOfStock.length, 1);
   assert.equal(result.outOfStock[0]?.id, "1");
   assert.equal(result.outOfStock[0]?.recommended_order_quantity, 50);
+});
+
+test("buildPurchasingBuckets uses a configurable percentage above safety stock for near-safety alerts", () => {
+  const result = buildPurchasingBuckets([
+    {
+      id: "1",
+      sku: "CAP-ALERT",
+      name: "Alert cap",
+      category: "Capacitor",
+      producer: "Murata",
+      value: "10uF",
+      safety_stock: 100,
+      quantity_available: 120,
+      purchase_price: 0.2,
+      lead_time: 7
+    },
+    {
+      id: "2",
+      sku: "CAP-TOO-HIGH",
+      name: "Healthy cap",
+      category: "Capacitor",
+      producer: "Murata",
+      value: "22uF",
+      safety_stock: 100,
+      quantity_available: 121,
+      purchase_price: 0.3,
+      lead_time: 7
+    }
+  ], { nearSafetyThresholdPercent: 20 });
+
+  assert.equal(result.nearSafety.length, 1);
+  assert.equal(result.nearSafety[0]?.id, "1");
 });
 
 test("buildProductionShortageMetrics clears current shortage when available inventory now covers the stored net need", () => {
@@ -353,6 +389,7 @@ test("calculateProductionLongestLeadTime ignores covered rows", () => {
       leadTime: 21,
       availableInventory: 10,
       unitPrice: 1,
+      unitPriceIsEstimate: false,
       grossRequirement: 5,
       netRequirement: 0,
       grossCost: 5,
@@ -374,6 +411,7 @@ test("calculateProductionLongestLeadTime ignores covered rows", () => {
       leadTime: 14,
       availableInventory: 1,
       unitPrice: 2,
+      unitPriceIsEstimate: false,
       grossRequirement: 5,
       netRequirement: 4,
       grossCost: 10,
@@ -402,6 +440,7 @@ test("calculateProductionLongestLeadTime returns zero when all parts are covered
       leadTime: 21,
       availableInventory: 10,
       unitPrice: 1,
+      unitPriceIsEstimate: false,
       grossRequirement: 5,
       netRequirement: 0,
       grossCost: 5,

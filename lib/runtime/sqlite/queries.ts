@@ -1,6 +1,6 @@
 import type { SQLInputValue } from "node:sqlite";
 import { getStoredFileName, isImageFilePath } from "../../mappers/file-storage.ts";
-import { buildMrpRows, buildPurchasingBuckets, calculateProductionLongestLeadTime } from "../../mappers/mrp.ts";
+import { buildMrpRows, buildProductionShortageMetrics, buildPurchasingBuckets, calculateProductionLongestLeadTime } from "../../mappers/mrp.ts";
 import { summarizeReservedRequirements } from "../../mappers/production.ts";
 import type {
   AppSettings,
@@ -422,7 +422,7 @@ export async function getPurchasingOverview(): Promise<{
     const sellers = getAllSellers();
     const sellerMap = new Map(sellers.map((seller) => [seller.id, seller]));
     const requirements = allRows<ProductionRequirement>(
-      "select id, production_entry_id, component_id, gross_requirement, inventory_consumed, net_requirement, created_at from production_requirements order by created_at desc"
+      "select id, production_entry_id, component_id, gross_requirement, inventory_consumed, inventory_consumed_cost, net_requirement, created_at from production_requirements order by created_at desc"
     );
     const activeEntries = allRows<ProductionEntry>(
       "select id, version_id, quantity, status, completed_at, created_at from production_entries where status = 'under_production' order by created_at desc"
@@ -484,6 +484,15 @@ export async function getPurchasingOverview(): Promise<{
             if (!component) {
               return null;
             }
+            const metrics = buildProductionShortageMetrics({
+              totalGrossRequirement: item.gross_requirement,
+              totalNetRequirement: item.net_requirement,
+              availableInventory: inventoryMap.get(component.id)?.quantity_available ?? 0,
+              safetyStock: component.safety_stock
+            });
+            if (metrics.netNeed <= 0) {
+              return null;
+            }
             const sellerLink = sellerLinkMap.get(component.id);
             productionShortageIds.add(component.id);
             return {
@@ -499,12 +508,12 @@ export async function getPurchasingOverview(): Promise<{
               quantity_available: inventoryMap.get(component.id)?.quantity_available ?? 0,
               purchase_price: inventoryMap.get(component.id)?.purchase_price ?? null,
               lead_time: leadTimeMap.get(component.id) ?? null,
-              net_need: item.net_requirement,
+              net_need: metrics.netNeed,
               seller_id: sellerLink?.seller_id ?? null,
               seller_name: sellerLink?.seller_name ?? null,
               seller_base_url: sellerLink?.seller_base_url ?? null,
               seller_product_url: sellerLink?.seller_product_url ?? null,
-              recommended_order_quantity: item.net_requirement + component.safety_stock,
+              recommended_order_quantity: metrics.recommendedOrderQuantity,
               production_entry_id: entry.id,
               product_name: product?.name ?? "Unknown product",
               version_number: version?.version_number ?? "-",
@@ -587,6 +596,10 @@ export async function getPurchasingOverview(): Promise<{
       || left.version_number.localeCompare(right.version_number)
     );
 
+    const settings = oneRow<{ near_safety_threshold_percent: number }>(
+      "select near_safety_threshold_percent from app_settings where id = 1"
+    );
+
     const buckets = buildPurchasingBuckets(
       components.map((component) => {
         const itemInventory = inventoryMap.get(component.id);
@@ -601,7 +614,8 @@ export async function getPurchasingOverview(): Promise<{
           seller_base_url: sellerLink?.seller_base_url ?? null,
           seller_product_url: sellerLink?.seller_product_url ?? null
         };
-      })
+      }),
+      { nearSafetyThresholdPercent: settings?.near_safety_threshold_percent ?? 10 }
     );
 
     const nearSafety: PurchasingItem[] = buckets.nearSafety
@@ -637,12 +651,18 @@ export async function getPurchasingOverview(): Promise<{
 
 export async function getAppSettings(): Promise<{ item: AppSettings | null; error: string | null }> {
   try {
-    const item = oneRow<{ id: number; default_safety_stock: number }>(
-      "select id, default_safety_stock from app_settings where id = 1"
+    const item = oneRow<{ id: number; default_safety_stock: number; near_safety_threshold_percent: number }>(
+      "select id, default_safety_stock, near_safety_threshold_percent from app_settings where id = 1"
     );
 
     return {
-      item: item ? { id: true, default_safety_stock: item.default_safety_stock } : { id: true, default_safety_stock: 25 },
+      item: item
+        ? {
+            id: true,
+            default_safety_stock: item.default_safety_stock,
+            near_safety_threshold_percent: item.near_safety_threshold_percent
+          }
+        : { id: true, default_safety_stock: 25, near_safety_threshold_percent: 10 },
       error: null
     };
   } catch (error) {
@@ -688,15 +708,35 @@ export async function getVersionDetail(
       `,
       { id }
     );
+    const selectedEntry = options?.productionEntryId
+      ? oneRow<ProductionEntry>(
+          `
+            select id, version_id, quantity, status, completed_at, created_at
+            from production_entries
+            where id = :entryId and version_id = :id
+          `,
+          { entryId: options.productionEntryId, id }
+        )
+      : null;
     const activeEntryIds = activeEntries.map((entry) => entry.id);
     const activeRequirements = activeEntryIds.length > 0
       ? allRows<ProductionRequirement>(
           `
-            select id, production_entry_id, component_id, gross_requirement, inventory_consumed, net_requirement, created_at
+            select id, production_entry_id, component_id, gross_requirement, inventory_consumed, inventory_consumed_cost, net_requirement, created_at
             from production_requirements
             where production_entry_id in (${activeEntryIds.map((_, index) => `:entry${index}`).join(", ")})
           `,
           Object.fromEntries(activeEntryIds.map((entryId, index) => [`entry${index}`, entryId]))
+        )
+      : [];
+    const selectedEntryRequirements = selectedEntry
+      ? allRows<ProductionRequirement>(
+          `
+            select id, production_entry_id, component_id, gross_requirement, inventory_consumed, inventory_consumed_cost, net_requirement, created_at
+            from production_requirements
+            where production_entry_id = :entryId
+          `,
+          { entryId: selectedEntry.id }
         )
       : [];
 
@@ -707,16 +747,32 @@ export async function getVersionDetail(
         component_id: item.component_id,
         gross_requirement: item.gross_requirement,
         inventory_consumed: item.inventory_consumed,
+        inventory_consumed_cost: item.inventory_consumed_cost ?? 0,
         net_requirement: item.net_requirement,
         quantity: productionQuantityMap.get(item.production_entry_id) ?? 0
       }))
     );
     const entryRequirementMap = new Map<string, number>();
-    if (options?.productionEntryId) {
-      for (const item of activeRequirements.filter((requirement) => requirement.production_entry_id === options.productionEntryId)) {
+    const entryRequirementCostMap = new Map<string, number>();
+    const entryRequirementGrossMap = new Map<string, number>();
+    const entryRequirementNetMap = new Map<string, number>();
+    if (selectedEntry) {
+      for (const item of selectedEntryRequirements) {
         entryRequirementMap.set(
           item.component_id,
           (entryRequirementMap.get(item.component_id) ?? 0) + item.inventory_consumed
+        );
+        entryRequirementCostMap.set(
+          item.component_id,
+          (entryRequirementCostMap.get(item.component_id) ?? 0) + (item.inventory_consumed_cost ?? 0)
+        );
+        entryRequirementGrossMap.set(
+          item.component_id,
+          (entryRequirementGrossMap.get(item.component_id) ?? 0) + item.gross_requirement
+        );
+        entryRequirementNetMap.set(
+          item.component_id,
+          (entryRequirementNetMap.get(item.component_id) ?? 0) + item.net_requirement
         );
       }
     }
@@ -746,8 +802,12 @@ export async function getVersionDetail(
         reserved: {
           gross_requirement: number;
           inventory_consumed: number;
+          inventory_consumed_cost: number;
           net_requirement: number;
+          entry_gross_requirement: number | null;
           entry_inventory_consumed: number | null;
+          entry_inventory_consumed_cost: number | null;
+          entry_net_requirement: number | null;
           active_production_quantity: number;
           active_entry_count: number;
         };
@@ -774,8 +834,12 @@ export async function getVersionDetail(
           reserved: {
             gross_requirement: reservedSummary[component.id]?.grossRequirement ?? 0,
             inventory_consumed: reservedSummary[component.id]?.inventoryConsumed ?? 0,
+            inventory_consumed_cost: reservedSummary[component.id]?.inventoryConsumedCost ?? 0,
             net_requirement: reservedSummary[component.id]?.netRequirement ?? 0,
+            entry_gross_requirement: entryRequirementGrossMap.get(component.id) ?? null,
             entry_inventory_consumed: entryRequirementMap.get(component.id) ?? null,
+            entry_inventory_consumed_cost: entryRequirementCostMap.get(component.id) ?? null,
+            entry_net_requirement: entryRequirementNetMap.get(component.id) ?? null,
             active_production_quantity: reservedSummary[component.id]?.activeProductionQuantity ?? 0,
             active_entry_count: reservedSummary[component.id]?.activeEntryCount ?? 0
           }

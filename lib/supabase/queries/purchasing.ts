@@ -1,5 +1,6 @@
 import { unstable_noStore as noStore } from "next/cache";
 import { aggregateProductionRequirements, buildProductionShortageMetrics, buildPurchasingBuckets } from "@/lib/mappers/mrp";
+import { isMissingColumnError } from "@/lib/mappers/supabase-errors";
 import type {
   ComponentMaster,
   InventoryItem,
@@ -26,7 +27,7 @@ export async function getPurchasingOverview(): Promise<{
   noStore();
   const supabase = await createSupabaseClient();
   const adminSupabase = createSupabaseAdminClient();
-  const [componentsResult, inventoryResult, linksResult, sellerLinksResult, sellersResult, productionRequirementsResult, productionEntriesResult, versionsResult, productsResult] = await Promise.all([
+  const [componentsResult, inventoryResult, linksResult, sellerLinksResult, sellersResult, productionRequirementsResult, productionEntriesResult, versionsResult, productsResult, settingsResult] = await Promise.all([
     safeSelect<ComponentMaster>(
       supabase.from("components").select("id,sku,name,category,producer,value,safety_stock").order("category").order("name")
     ),
@@ -60,8 +61,18 @@ export async function getPurchasingOverview(): Promise<{
     ),
     safeSelect<{ id: string; name: string; image: string | null }>(
       supabase.from("products").select("id,name,image")
+    ),
+    safeSelect<{ id: boolean; default_safety_stock: number; near_safety_threshold_percent: number }>(
+      adminSupabase
+        .schema(PRIVATE_SCHEMA)
+        .from("app_settings")
+        .select("id,default_safety_stock,near_safety_threshold_percent")
     )
   ]);
+
+  const settingsMissingThresholdColumn = settingsResult.error
+    ? isMissingColumnError(settingsResult.error, "app_settings", "near_safety_threshold_percent")
+    : false;
 
   const inventoryMap = new Map(inventoryResult.data.map((item) => [item.component_id, item]));
   const componentMap = new Map(componentsResult.data.map((component) => [component.id, component]));
@@ -119,6 +130,15 @@ export async function getPurchasingOverview(): Promise<{
           if (!component) {
             return null;
           }
+          const metrics = buildProductionShortageMetrics({
+            totalGrossRequirement: item.gross_requirement,
+            totalNetRequirement: item.net_requirement,
+            availableInventory: inventoryMap.get(component.id)?.quantity_available ?? 0,
+            safetyStock: component.safety_stock
+          });
+          if (metrics.netNeed <= 0) {
+            return null;
+          }
           const sellerLink = sellerLinkMap.get(item.component_id);
           productionShortageIds.add(component.id);
           return {
@@ -134,12 +154,12 @@ export async function getPurchasingOverview(): Promise<{
             quantity_available: inventoryMap.get(component.id)?.quantity_available ?? 0,
             purchase_price: inventoryMap.get(component.id)?.purchase_price ?? null,
             lead_time: leadTimeMap.get(component.id) ?? null,
-            net_need: item.net_requirement,
+            net_need: metrics.netNeed,
             seller_id: sellerLink?.seller_id ?? null,
             seller_name: sellerLink?.seller_name ?? null,
             seller_base_url: sellerLink?.seller_base_url ?? null,
             seller_product_url: sellerLink?.seller_product_url ?? null,
-            recommended_order_quantity: item.net_requirement + component.safety_stock,
+            recommended_order_quantity: metrics.recommendedOrderQuantity,
             production_entry_id: entry.id,
             product_name: product?.name ?? "Unknown product",
             version_number: version?.version_number ?? "-",
@@ -254,7 +274,12 @@ export async function getPurchasingOverview(): Promise<{
         seller_base_url: sellerLink?.seller_base_url ?? null,
         seller_product_url: sellerLink?.seller_product_url ?? null
       };
-    })
+    }),
+    {
+      nearSafetyThresholdPercent: settingsMissingThresholdColumn
+        ? 10
+        : (settingsResult.data[0]?.near_safety_threshold_percent ?? 10)
+    }
   );
 
   const nearSafety: PurchasingItem[] = buckets.nearSafety
@@ -268,7 +293,6 @@ export async function getPurchasingOverview(): Promise<{
       };
     })
     .filter((item) => !productionShortageIds.has(item.id))
-    .filter((item) => item.quantity_available > 0 && item.quantity_available < item.safety_stock * 1.5)
     .sort((left, right) => left.quantity_available - right.quantity_available);
 
   const outOfStock: PurchasingItem[] = buckets.outOfStock
@@ -293,6 +317,7 @@ export async function getPurchasingOverview(): Promise<{
       productionRequirementsResult.error ??
       productionEntriesResult.error ??
       versionsResult.error ??
-      productsResult.error
+      productsResult.error ??
+      (settingsMissingThresholdColumn ? null : settingsResult.error)
   };
 }

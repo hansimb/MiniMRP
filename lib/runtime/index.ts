@@ -11,7 +11,7 @@ export async function getRuntimeQueries(): Promise<RuntimeQueries> {
   const runtimeMode = getRuntimeMode();
 
   if (runtimeMode === "sqlite") {
-    return (await import(`./${runtimeMode}/queries.ts`)) as RuntimeQueries;
+    return (await import("./sqlite/queries.ts")) as RuntimeQueries;
   }
 
   return (await import("./supabase/queries.ts")) as RuntimeQueries;

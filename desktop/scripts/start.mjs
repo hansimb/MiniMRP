@@ -13,6 +13,7 @@ const nextProcess = spawnProcess(
   process.platform === "win32" ? "npm.cmd" : "npm",
   ["run", "start", "--", "--hostname", "127.0.0.1", "--port", String(port)],
   {
+    MINIMRP_DESKTOP_RUNTIME: "1",
     MINIMRP_RUNTIME: "sqlite",
     NEXT_PUBLIC_MINIMRP_RUNTIME: "sqlite"
   }
@@ -37,6 +38,7 @@ const electronProcess = spawnProcess(
   process.platform === "win32" ? "npx.cmd" : "npx",
   ["electron", "desktop/electron/main.mjs"],
   {
+    MINIMRP_DESKTOP_RUNTIME: "1",
     MINIMRP_RUNTIME: "sqlite",
     NEXT_PUBLIC_MINIMRP_RUNTIME: "sqlite",
     MINIMRP_DESKTOP_URL: desktopUrl

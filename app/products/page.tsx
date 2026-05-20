@@ -1,9 +1,12 @@
 import Link from "next/link";
 import { createProductAction } from "@/lib/runtime/actions";
-import { getRuntimeQueries } from "@/lib/runtime";
+import { getRuntimeMode, getRuntimeQueries } from "@/lib/runtime";
 import { Badge, EmptyState, ModalTrigger, Notice, PageHeader, Panel } from "@/shared/ui";
 
+export const dynamic = "force-dynamic";
+
 export default async function ProductsPage() {
+  const runtimeMode = getRuntimeMode();
   const queries = await getRuntimeQueries();
   const { items, error } = await queries.getProductList();
 
@@ -16,8 +19,9 @@ export default async function ProductsPage() {
 
       {error ? (
         <Notice error>
-          Supabase query failed. Check that the `supabase/production/` SQL files were applied to this
-          project and that the signed-in user has the `admin` role.
+          {runtimeMode === "supabase"
+            ? "Supabase query failed. Check that the `supabase/production/` SQL files were applied to this project and that the signed-in user has the `admin` role."
+            : "Database query failed while loading products."}
           <br />
           <br />
           Error: {error}

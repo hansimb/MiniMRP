@@ -8,6 +8,8 @@ import { deletePartAction } from "@/lib/runtime/actions";
 import { getRuntimeQueries } from "@/lib/runtime";
 import { BackLink, ModalTrigger, Notice, PageHeader } from "@/shared/ui";
 
+export const dynamic = "force-dynamic";
+
 export default async function ComponentDetailPage(props: {
   params: Promise<{ id: string }>;
 }) {

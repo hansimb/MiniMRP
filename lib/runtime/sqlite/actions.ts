@@ -1024,29 +1024,41 @@ export async function deleteInventoryLotAction(formData: FormData) {
 
 export async function updateDefaultSafetyStockAction(formData: FormData) {
   const value = Number(requiredValue(formData.get("default_safety_stock"), "Default safety stock"));
-  const previous = getRow<{ id: number; default_safety_stock: number }>(
-    "select id, default_safety_stock from app_settings where id = 1"
+  const thresholdPercent = Number(
+    requiredValue(formData.get("near_safety_threshold_percent"), "Near safety threshold")
+  );
+  const previous = getRow<{ id: number; default_safety_stock: number; near_safety_threshold_percent: number }>(
+    "select id, default_safety_stock, near_safety_threshold_percent from app_settings where id = 1"
   );
   run(
-    `
-      insert into app_settings (id, default_safety_stock)
-      values (1, :default_safety_stock)
+      `
+      insert into app_settings (id, default_safety_stock, near_safety_threshold_percent)
+      values (1, :default_safety_stock, :near_safety_threshold_percent)
       on conflict(id)
-      do update set default_safety_stock = excluded.default_safety_stock
+      do update set
+        default_safety_stock = excluded.default_safety_stock,
+        near_safety_threshold_percent = excluded.near_safety_threshold_percent
     `,
-    { default_safety_stock: value }
+    {
+      default_safety_stock: value,
+      near_safety_threshold_percent: thresholdPercent
+    }
   );
 
   await recordHistory({
     entity_type: "settings",
     entity_id: "app_settings",
     action_type: "update",
-    summary: `Updated default safety stock to ${value}`,
+    summary: `Updated default safety stock to ${value} and near safety threshold to ${thresholdPercent}%`,
     old_value: stringifyHistoryValue(previous),
-    new_value: stringifyHistoryValue({ id: true, default_safety_stock: value })
+    new_value: stringifyHistoryValue({
+      id: true,
+      default_safety_stock: value,
+      near_safety_threshold_percent: thresholdPercent
+    })
   });
 
-  revalidateAppViews(["/components", "/settings", "/history"]);
+  revalidateAppViews(["/components", "/purchasing", "/settings", "/history"]);
   redirect("/settings");
 }
 
@@ -1220,21 +1232,25 @@ export async function addProductionEntryAction(formData: FormData) {
     { id: entryId, version_id: versionId, quantity }
   );
 
+  const requirementIdsByComponent = new Map<string, string>();
   for (const row of reservedRequirements) {
+    const requirementId = createId();
+    requirementIdsByComponent.set(row.componentId, requirementId);
     run(
       `
         insert into production_requirements (
-          id, production_entry_id, component_id, gross_requirement, inventory_consumed, net_requirement
+          id, production_entry_id, component_id, gross_requirement, inventory_consumed, inventory_consumed_cost, net_requirement
         ) values (
-          :id, :production_entry_id, :component_id, :gross_requirement, :inventory_consumed, :net_requirement
+          :id, :production_entry_id, :component_id, :gross_requirement, :inventory_consumed, :inventory_consumed_cost, :net_requirement
         )
       `,
       {
-        id: createId(),
+        id: requirementId,
         production_entry_id: entryId,
         component_id: row.componentId,
         gross_requirement: row.grossRequirement,
         inventory_consumed: row.inventoryConsumed,
+        inventory_consumed_cost: 0,
         net_requirement: row.netRequirement
       }
     );
@@ -1274,6 +1290,17 @@ export async function addProductionEntryAction(formData: FormData) {
       });
     }
 
+    const requirementId = requirementIdsByComponent.get(component.component.id);
+    if (requirementId) {
+      run(
+        "update production_requirements set inventory_consumed_cost = :inventory_consumed_cost where id = :id",
+        {
+          id: requirementId,
+          inventory_consumed_cost: consumption.consumedValue
+        }
+      );
+    }
+
     syncInventorySummaryForComponent(component.component.id);
   }
 
@@ -1301,8 +1328,8 @@ export async function cancelProductionEntryAction(formData: FormData) {
     "select id, version_id, quantity, status, completed_at, created_at from production_entries where id = :id",
     { id: productionEntryId }
   );
-  const requirements = getRows<{ component_id: string; inventory_consumed: number }>(
-    "select component_id, inventory_consumed from production_requirements where production_entry_id = :id",
+  const requirements = getRows<{ component_id: string; inventory_consumed: number; inventory_consumed_cost: number }>(
+    "select component_id, inventory_consumed, inventory_consumed_cost from production_requirements where production_entry_id = :id",
     { id: productionEntryId }
   );
   if (!entry) {
@@ -1318,6 +1345,10 @@ export async function cancelProductionEntryAction(formData: FormData) {
       "select purchase_price from inventory where component_id = :component_id",
       { component_id: requirement.component_id }
     );
+    const unitCostFromReservation =
+      requirement.inventory_consumed > 0
+        ? Number((requirement.inventory_consumed_cost ?? 0) / requirement.inventory_consumed)
+        : null;
     run(
       `
         insert into inventory_lots (
@@ -1331,7 +1362,7 @@ export async function cancelProductionEntryAction(formData: FormData) {
         component_id: requirement.component_id,
         quantity_received: requirement.inventory_consumed,
         quantity_remaining: requirement.inventory_consumed,
-        unit_cost: Number(inventory?.purchase_price ?? 0),
+        unit_cost: Number(unitCostFromReservation ?? inventory?.purchase_price ?? 0),
         received_at: new Date().toISOString(),
         source: "production_cancel",
         notes: `Returned from cancelled production entry ${productionEntryId}`
@@ -1365,9 +1396,10 @@ export async function completeProductionEntryAction(formData: FormData) {
     component_id: string;
     gross_requirement: number;
     inventory_consumed: number;
+    inventory_consumed_cost: number;
     net_requirement: number;
   }>(
-    "select id, component_id, gross_requirement, inventory_consumed, net_requirement from production_requirements where production_entry_id = :id",
+    "select id, component_id, gross_requirement, inventory_consumed, inventory_consumed_cost, net_requirement from production_requirements where production_entry_id = :id",
     { id: productionEntryId }
   );
   if (!previous) {
@@ -1375,7 +1407,12 @@ export async function completeProductionEntryAction(formData: FormData) {
   }
 
   const openRequirements = requirements.filter((item) => item.net_requirement > 0);
-  let completionRequirementUpdates: Array<{ id: string; inventory_consumed: number; net_requirement: number }> = [];
+  let completionRequirementUpdates: Array<{
+    id: string;
+    inventory_consumed: number;
+    inventory_consumed_cost: number;
+    net_requirement: number;
+  }> = [];
 
   if (openRequirements.length > 0) {
     const componentIds = Array.from(new Set(openRequirements.map((item) => item.component_id)));
@@ -1432,7 +1469,7 @@ export async function completeProductionEntryAction(formData: FormData) {
     }
     for (const requirement of completionPlan.requirementUpdates) {
       run(
-        "update production_requirements set inventory_consumed = :inventory_consumed, net_requirement = :net_requirement where id = :id",
+        "update production_requirements set inventory_consumed = :inventory_consumed, inventory_consumed_cost = inventory_consumed_cost + :inventory_consumed_cost, net_requirement = :net_requirement where id = :id",
         requirement
       );
     }

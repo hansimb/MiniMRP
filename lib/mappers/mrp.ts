@@ -16,6 +16,7 @@ export interface MrpRow {
   leadTime: number | null;
   availableInventory: number;
   unitPrice: number | null;
+  unitPriceIsEstimate: boolean;
   grossRequirement: number;
   netRequirement: number;
   grossCost: number | null;
@@ -74,12 +75,31 @@ export function calculateVersionUnitCost(components: VersionComponent[]) {
 export function buildMrpRows(components: VersionComponent[], buildQuantity: number): MrpRow[] {
   return components.map((row) => {
     const unitPrice = row.inventory?.purchase_price ?? null;
-    const grossRequirement = row.quantity * buildQuantity;
-    const availableInventory = row.inventory?.quantity_available ?? 0;
+    const entryGrossRequirement = row.reserved?.entry_gross_requirement ?? null;
+    const entryNetRequirement = row.reserved?.entry_net_requirement ?? null;
+    const entryReservedQuantity = row.reserved?.entry_inventory_consumed ?? null;
+    const grossRequirement = entryGrossRequirement ?? row.quantity * buildQuantity;
+    const availableInventory =
+      entryReservedQuantity !== null && entryNetRequirement !== null
+        ? entryReservedQuantity
+        : row.inventory?.quantity_available ?? 0;
+    const unitPriceIsEstimate = unitPrice !== null && availableInventory <= 0;
     const safetyStock = row.component.safety_stock ?? 0;
-    const netRequirement = Math.max(grossRequirement - availableInventory, 0);
-    const reservedForThisCalculation = Math.min(availableInventory, grossRequirement);
-    const grossCost = unitPrice === null ? null : roundCurrency(grossRequirement * unitPrice);
+    const netRequirement =
+      entryNetRequirement !== null ? entryNetRequirement : Math.max(grossRequirement - availableInventory, 0);
+    const reservedForThisCalculation =
+      entryReservedQuantity !== null ? entryReservedQuantity : Math.min(availableInventory, grossRequirement);
+    const reservedForEntry = entryReservedQuantity;
+    const reservedCostForEntry = row.reserved?.entry_inventory_consumed_cost ?? null;
+    const unreservedGrossRequirement = Math.max(grossRequirement - (reservedForEntry ?? 0), 0);
+    const grossCost =
+      reservedCostForEntry !== null
+        ? unitPrice === null && unreservedGrossRequirement > 0
+          ? null
+          : roundCurrency(reservedCostForEntry + (unitPrice === null ? 0 : unreservedGrossRequirement * unitPrice))
+        : unitPrice === null
+          ? null
+          : roundCurrency(grossRequirement * unitPrice);
     const netCost = unitPrice === null ? null : roundCurrency(netRequirement * unitPrice);
 
     return {
@@ -96,12 +116,13 @@ export function buildMrpRows(components: VersionComponent[], buildQuantity: numb
       leadTime: row.lead_time ?? null,
       availableInventory,
       unitPrice,
+      unitPriceIsEstimate,
       grossRequirement,
       netRequirement,
       grossCost,
       netCost,
       reservedForThisCalculation,
-      reservedForEntry: row.reserved?.entry_inventory_consumed ?? null,
+      reservedForEntry,
       reservedInventory: row.reserved?.inventory_consumed ?? 0,
       activeProductionQuantity: row.reserved?.active_production_quantity ?? 0
     };
@@ -156,7 +177,9 @@ export function buildPurchasingBuckets<T extends {
   quantity_available: number;
   purchase_price: number | null;
   lead_time: number | null;
-}>(items: T[]) {
+}>(items: T[], options?: { nearSafetyThresholdPercent?: number }) {
+  const nearSafetyThresholdPercent = options?.nearSafetyThresholdPercent ?? 10;
+
   const outOfStock = items
     .filter((item) => item.quantity_available <= 0)
     .map((item) => ({
@@ -170,7 +193,7 @@ export function buildPurchasingBuckets<T extends {
     .filter(
       (item) =>
         item.quantity_available > 0 &&
-        item.quantity_available <= item.safety_stock + 10
+        item.quantity_available <= item.safety_stock * (1 + nearSafetyThresholdPercent / 100)
     )
     .map((item) => ({
       ...item,

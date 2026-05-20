@@ -3,6 +3,8 @@ import { InventoryRowsPanel } from "@/features/inventory/components/inventory-ro
 import { getRuntimeQueries } from "@/lib/runtime";
 import { Notice, PageHeader } from "@/shared/ui";
 
+export const dynamic = "force-dynamic";
+
 export default async function InventoryPage(props: {
   searchParams?: Promise<{ category?: string; search?: string }>;
 }) {

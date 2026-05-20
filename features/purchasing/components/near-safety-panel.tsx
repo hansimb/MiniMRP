@@ -7,7 +7,7 @@ export function NearSafetyPanel(props: { items: PurchasingItem[] }) {
   return (
     <Panel
       title="Near safety"
-      description="Components with inventory above zero but below 1.5x safety stock, excluding active shortages."
+      description="Components approaching safety stock based on your settings, excluding active production shortages."
     >
       {props.items.length === 0 ? (
         <EmptyState>No components near safety stock.</EmptyState>

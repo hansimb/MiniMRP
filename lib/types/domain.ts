@@ -73,6 +73,7 @@ export interface HistoryEvent {
 export interface AppSettings {
   id: boolean;
   default_safety_stock: number;
+  near_safety_threshold_percent: number;
 }
 
 export interface Attachment {
@@ -110,8 +111,12 @@ export interface VersionDetail extends ProductVersion {
     reserved?: {
       gross_requirement: number;
       inventory_consumed: number;
+      inventory_consumed_cost?: number;
       net_requirement: number;
+      entry_gross_requirement?: number | null;
       entry_inventory_consumed: number | null;
+      entry_inventory_consumed_cost?: number | null;
+      entry_net_requirement?: number | null;
       active_production_quantity: number;
       active_entry_count: number;
     };
@@ -186,6 +191,7 @@ export interface ProductionRequirement {
   component_id: string;
   gross_requirement: number;
   inventory_consumed: number;
+  inventory_consumed_cost?: number;
   net_requirement: number;
   created_at: string;
 }

@@ -25,6 +25,33 @@ export function createDesktopDatabase(filename: string) {
 
 export function ensureSqliteSchema(db: DatabaseSyncType) {
   db.exec(ensureSqliteSchemaSql);
+  const appSettingsColumns = (
+    db.prepare("pragma table_info(app_settings)").all() as Array<{ name: string }>
+  ).map((column) => column.name);
+
+  if (!appSettingsColumns.includes("near_safety_threshold_percent")) {
+    db.exec(
+      "alter table app_settings add column near_safety_threshold_percent integer not null default 10;"
+    );
+  }
+
+  const productionRequirementColumns = (
+    db.prepare("pragma table_info(production_requirements)").all() as Array<{ name: string }>
+  ).map((column) => column.name);
+
+  if (!productionRequirementColumns.includes("inventory_consumed_cost")) {
+    db.exec(
+      "alter table production_requirements add column inventory_consumed_cost real not null default 0;"
+    );
+  }
+
+  db.exec(
+    "insert into app_settings (id, default_safety_stock) values (1, 25) on conflict(id) do nothing;"
+  );
+
+  db.exec(
+    "update app_settings set near_safety_threshold_percent = coalesce(near_safety_threshold_percent, 10) where id = 1;"
+  );
 }
 
 export function listSqliteTables(db: DatabaseSyncType) {

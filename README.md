@@ -103,9 +103,9 @@ npm run dev:desktop
 
 ## Desktop Executable
 
-Download the latest Windows desktop build here:
+Download the latest Windows desktop setup.exe build here:
 
-- [MiniMRP Desktop build](https://drive.google.com/file/d/1UvKSoitTH86UOugtwX-DLmz235h_0sFT/view?usp=sharing)
+- [MiniMRP Desktop build](https://drive.google.com/drive/folders/1SfUiB45TfaB3CrOeAICJxxRFNlvRajh7?usp=sharing)
 
 Build the default Windows installer with:
 
