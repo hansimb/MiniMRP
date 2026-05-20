@@ -708,6 +708,16 @@ export async function getVersionDetail(
       `,
       { id }
     );
+    const selectedEntry = options?.productionEntryId
+      ? oneRow<ProductionEntry>(
+          `
+            select id, version_id, quantity, status, completed_at, created_at
+            from production_entries
+            where id = :entryId and version_id = :id
+          `,
+          { entryId: options.productionEntryId, id }
+        )
+      : null;
     const activeEntryIds = activeEntries.map((entry) => entry.id);
     const activeRequirements = activeEntryIds.length > 0
       ? allRows<ProductionRequirement>(
@@ -719,6 +729,16 @@ export async function getVersionDetail(
           Object.fromEntries(activeEntryIds.map((entryId, index) => [`entry${index}`, entryId]))
         )
       : [];
+    const selectedEntryRequirements = selectedEntry
+      ? allRows<ProductionRequirement>(
+          `
+            select id, production_entry_id, component_id, gross_requirement, inventory_consumed, inventory_consumed_cost, net_requirement, created_at
+            from production_requirements
+            where production_entry_id = :entryId
+          `,
+          { entryId: selectedEntry.id }
+        )
+      : [];
 
     const activeProductionQuantity = activeEntries.reduce((total, entry) => total + entry.quantity, 0);
     const productionQuantityMap = new Map(activeEntries.map((entry) => [entry.id, entry.quantity]));
@@ -727,14 +747,17 @@ export async function getVersionDetail(
         component_id: item.component_id,
         gross_requirement: item.gross_requirement,
         inventory_consumed: item.inventory_consumed,
+        inventory_consumed_cost: item.inventory_consumed_cost ?? 0,
         net_requirement: item.net_requirement,
         quantity: productionQuantityMap.get(item.production_entry_id) ?? 0
       }))
     );
     const entryRequirementMap = new Map<string, number>();
     const entryRequirementCostMap = new Map<string, number>();
-    if (options?.productionEntryId) {
-      for (const item of activeRequirements.filter((requirement) => requirement.production_entry_id === options.productionEntryId)) {
+    const entryRequirementGrossMap = new Map<string, number>();
+    const entryRequirementNetMap = new Map<string, number>();
+    if (selectedEntry) {
+      for (const item of selectedEntryRequirements) {
         entryRequirementMap.set(
           item.component_id,
           (entryRequirementMap.get(item.component_id) ?? 0) + item.inventory_consumed
@@ -742,6 +765,14 @@ export async function getVersionDetail(
         entryRequirementCostMap.set(
           item.component_id,
           (entryRequirementCostMap.get(item.component_id) ?? 0) + (item.inventory_consumed_cost ?? 0)
+        );
+        entryRequirementGrossMap.set(
+          item.component_id,
+          (entryRequirementGrossMap.get(item.component_id) ?? 0) + item.gross_requirement
+        );
+        entryRequirementNetMap.set(
+          item.component_id,
+          (entryRequirementNetMap.get(item.component_id) ?? 0) + item.net_requirement
         );
       }
     }
@@ -773,8 +804,10 @@ export async function getVersionDetail(
           inventory_consumed: number;
           inventory_consumed_cost: number;
           net_requirement: number;
+          entry_gross_requirement: number | null;
           entry_inventory_consumed: number | null;
           entry_inventory_consumed_cost: number | null;
+          entry_net_requirement: number | null;
           active_production_quantity: number;
           active_entry_count: number;
         };
@@ -803,8 +836,10 @@ export async function getVersionDetail(
             inventory_consumed: reservedSummary[component.id]?.inventoryConsumed ?? 0,
             inventory_consumed_cost: reservedSummary[component.id]?.inventoryConsumedCost ?? 0,
             net_requirement: reservedSummary[component.id]?.netRequirement ?? 0,
+            entry_gross_requirement: entryRequirementGrossMap.get(component.id) ?? null,
             entry_inventory_consumed: entryRequirementMap.get(component.id) ?? null,
             entry_inventory_consumed_cost: entryRequirementCostMap.get(component.id) ?? null,
+            entry_net_requirement: entryRequirementNetMap.get(component.id) ?? null,
             active_production_quantity: reservedSummary[component.id]?.activeProductionQuantity ?? 0,
             active_entry_count: reservedSummary[component.id]?.activeEntryCount ?? 0
           }

@@ -41,7 +41,7 @@ export async function getVersionDetail(
     return { item: null, error: null };
   }
 
-  const [productResult, attachmentsResult, referencesResult, componentsResult, inventoryResult, linksResult, sellersResult, activeProductionEntriesResult] =
+  const [productResult, attachmentsResult, referencesResult, componentsResult, inventoryResult, linksResult, sellersResult, activeProductionEntriesResult, selectedEntryResult] =
     await Promise.all([
       supabase
         .from("products")
@@ -78,6 +78,16 @@ export async function getVersionDetail(
           .eq("version_id", id)
           .eq("status", "under_production")
       )
+      ,
+      options?.productionEntryId
+        ? safeSelect<ProductionEntry>(
+            supabase
+              .from("production_entries")
+              .select("id,version_id,quantity,status,completed_at,created_at")
+              .eq("id", options.productionEntryId)
+              .eq("version_id", id)
+          )
+        : Promise.resolve({ data: [] as ProductionEntry[], error: null as string | null })
     ]);
 
   const activeProductionEntryIds = activeProductionEntriesResult.data.map((entry) => entry.id);
@@ -91,8 +101,18 @@ export async function getVersionDetail(
       ? await safeSelect<ProductionRequirement>(
           supabase
             .from("production_requirements")
-            .select("id,production_entry_id,component_id,gross_requirement,inventory_consumed,net_requirement,created_at")
+            .select("id,production_entry_id,component_id,gross_requirement,inventory_consumed,inventory_consumed_cost,net_requirement,created_at")
             .in("production_entry_id", activeProductionEntryIds)
+        )
+      : { data: [] as ProductionRequirement[], error: null as string | null };
+  const selectedEntry = selectedEntryResult.data[0] ?? null;
+  const selectedEntryRequirementsResult =
+    selectedEntry
+      ? await safeSelect<ProductionRequirement>(
+          supabase
+            .from("production_requirements")
+            .select("id,production_entry_id,component_id,gross_requirement,inventory_consumed,inventory_consumed_cost,net_requirement,created_at")
+            .eq("production_entry_id", selectedEntry.id)
         )
       : { data: [] as ProductionRequirement[], error: null as string | null };
 
@@ -108,18 +128,32 @@ export async function getVersionDetail(
       component_id: item.component_id,
       gross_requirement: item.gross_requirement,
       inventory_consumed: item.inventory_consumed,
+      inventory_consumed_cost: item.inventory_consumed_cost ?? 0,
       net_requirement: item.net_requirement,
       quantity: productionQuantityMap.get(item.production_entry_id) ?? 0
     }))
   );
   const entryRequirementMap = new Map<string, number>();
-  if (options?.productionEntryId) {
-    for (const item of activeRequirementsResult.data.filter(
-      (requirement) => requirement.production_entry_id === options.productionEntryId
-    )) {
+  const entryRequirementCostMap = new Map<string, number>();
+  const entryRequirementGrossMap = new Map<string, number>();
+  const entryRequirementNetMap = new Map<string, number>();
+  if (selectedEntry) {
+    for (const item of selectedEntryRequirementsResult.data) {
       entryRequirementMap.set(
         item.component_id,
         (entryRequirementMap.get(item.component_id) ?? 0) + item.inventory_consumed
+      );
+      entryRequirementCostMap.set(
+        item.component_id,
+        (entryRequirementCostMap.get(item.component_id) ?? 0) + (item.inventory_consumed_cost ?? 0)
+      );
+      entryRequirementGrossMap.set(
+        item.component_id,
+        (entryRequirementGrossMap.get(item.component_id) ?? 0) + item.gross_requirement
+      );
+      entryRequirementNetMap.set(
+        item.component_id,
+        (entryRequirementNetMap.get(item.component_id) ?? 0) + item.net_requirement
       );
     }
   }
@@ -149,8 +183,10 @@ export async function getVersionDetail(
           inventory_consumed: number;
           inventory_consumed_cost?: number;
           net_requirement: number;
+          entry_gross_requirement?: number | null;
           entry_inventory_consumed: number | null;
           entry_inventory_consumed_cost?: number | null;
+          entry_net_requirement?: number | null;
           active_production_quantity: number;
           active_entry_count: number;
         };
@@ -177,8 +213,12 @@ export async function getVersionDetail(
         reserved: {
           gross_requirement: reservedSummary[component.id]?.grossRequirement ?? 0,
           inventory_consumed: reservedSummary[component.id]?.inventoryConsumed ?? 0,
+          inventory_consumed_cost: reservedSummary[component.id]?.inventoryConsumedCost ?? 0,
           net_requirement: reservedSummary[component.id]?.netRequirement ?? 0,
+          entry_gross_requirement: entryRequirementGrossMap.get(component.id) ?? null,
           entry_inventory_consumed: entryRequirementMap.get(component.id) ?? null,
+          entry_inventory_consumed_cost: entryRequirementCostMap.get(component.id) ?? null,
+          entry_net_requirement: entryRequirementNetMap.get(component.id) ?? null,
           active_production_quantity: reservedSummary[component.id]?.activeProductionQuantity ?? 0,
           active_entry_count: reservedSummary[component.id]?.activeEntryCount ?? 0
         }
@@ -195,7 +235,9 @@ export async function getVersionDetail(
     linksResult.error ??
     sellersResult.error ??
     activeProductionEntriesResult.error ??
-    activeRequirementsResult.error;
+    activeRequirementsResult.error ??
+    selectedEntryResult.error ??
+    selectedEntryRequirementsResult.error;
 
   if (error) {
     return {

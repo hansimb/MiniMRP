@@ -113,8 +113,10 @@ export interface VersionDetail extends ProductVersion {
       inventory_consumed: number;
       inventory_consumed_cost?: number;
       net_requirement: number;
+      entry_gross_requirement?: number | null;
       entry_inventory_consumed: number | null;
       entry_inventory_consumed_cost?: number | null;
+      entry_net_requirement?: number | null;
       active_production_quantity: number;
       active_entry_count: number;
     };

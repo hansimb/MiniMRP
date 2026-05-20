@@ -5,8 +5,11 @@ import process from "node:process";
 import { spawnProcess } from "./runtime-helpers.mjs";
 
 const buildDataDir = fs.mkdtempSync(path.join(os.tmpdir(), "minimrp-desktop-build-"));
+const nextBuildOutputDir = path.join(process.cwd(), ".next");
 
 try {
+  fs.rmSync(nextBuildOutputDir, { recursive: true, force: true });
+
   const nextBuildProcess = spawnProcess(
     process.platform === "win32" ? "npm.cmd" : "npm",
     ["run", "build"],
