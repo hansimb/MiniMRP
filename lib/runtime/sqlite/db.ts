@@ -36,6 +36,10 @@ export function ensureSqliteSchema(db: DatabaseSyncType) {
   }
 
   db.exec(
+    "insert into app_settings (id, default_safety_stock) values (1, 25) on conflict(id) do nothing;"
+  );
+
+  db.exec(
     "update app_settings set near_safety_threshold_percent = coalesce(near_safety_threshold_percent, 10) where id = 1;"
   );
 }

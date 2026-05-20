@@ -53,3 +53,30 @@ test("sqlite runtime exposes empty shared view shapes on a fresh database", asyn
     near_safety_threshold_percent: 10
   });
 });
+
+test("sqlite schema migration adds near_safety_threshold_percent to legacy app_settings tables", () => {
+  const db = createDesktopDatabase(":memory:");
+  db.exec(`
+    create table app_settings (
+      id integer primary key check (id = 1),
+      default_safety_stock integer not null default 25
+    );
+    insert into app_settings (id, default_safety_stock) values (1, 25);
+  `);
+
+  ensureSqliteSchema(db);
+
+  const columns = (
+    db.prepare("pragma table_info(app_settings)").all() as Array<{ name: string }>
+  ).map((column) => column.name);
+  const row = db
+    .prepare("select id, default_safety_stock, near_safety_threshold_percent from app_settings where id = 1")
+    .get() as { id: number; default_safety_stock: number; near_safety_threshold_percent: number };
+
+  assert.equal(columns.includes("near_safety_threshold_percent"), true);
+  assert.deepEqual({ ...row }, {
+    id: 1,
+    default_safety_stock: 25,
+    near_safety_threshold_percent: 10
+  });
+});

@@ -2,6 +2,7 @@
 
 import { requireAdminAction } from "@/lib/auth/require-admin";
 import { parseSpreadsheetFile, normalizeMasterDataRows } from "@/lib/import/master-data";
+import { getColumnSetupErrorMessage } from "@/lib/mappers/supabase-errors";
 import { syncInventorySummariesForComponents } from "./inventory-summary";
 import { createSupabaseAdminClient } from "../admin-client";
 import { APP_SETTINGS_TABLE, INVENTORY_LOTS_TABLE, PRIVATE_SCHEMA } from "../table-names";
@@ -22,7 +23,9 @@ export async function updateDefaultSafetyStockAction(formData: FormData) {
     .maybeSingle();
 
   if (previous.error) {
-    throw new Error(previous.error.message);
+    throw new Error(
+      getColumnSetupErrorMessage(previous.error.message, APP_SETTINGS_TABLE, "near_safety_threshold_percent")
+    );
   }
 
   const result = await supabase.schema(PRIVATE_SCHEMA).from(APP_SETTINGS_TABLE).upsert({
@@ -32,7 +35,9 @@ export async function updateDefaultSafetyStockAction(formData: FormData) {
   });
 
   if (result.error) {
-    throw new Error(result.error.message);
+    throw new Error(
+      getColumnSetupErrorMessage(result.error.message, APP_SETTINGS_TABLE, "near_safety_threshold_percent")
+    );
   }
 
   await recordHistory({

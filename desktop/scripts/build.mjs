@@ -11,6 +11,7 @@ try {
     process.platform === "win32" ? "npm.cmd" : "npm",
     ["run", "build"],
     {
+      MINIMRP_DESKTOP_RUNTIME: "1",
       MINIMRP_RUNTIME: "sqlite",
       NEXT_PUBLIC_MINIMRP_RUNTIME: "sqlite",
       MINIMRP_DESKTOP_DATA_DIR: buildDataDir

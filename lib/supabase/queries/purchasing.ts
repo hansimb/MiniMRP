@@ -1,5 +1,6 @@
 import { unstable_noStore as noStore } from "next/cache";
 import { aggregateProductionRequirements, buildProductionShortageMetrics, buildPurchasingBuckets } from "@/lib/mappers/mrp";
+import { isMissingColumnError } from "@/lib/mappers/supabase-errors";
 import type {
   ComponentMaster,
   InventoryItem,
@@ -68,6 +69,10 @@ export async function getPurchasingOverview(): Promise<{
         .select("id,default_safety_stock,near_safety_threshold_percent")
     )
   ]);
+
+  const settingsMissingThresholdColumn = settingsResult.error
+    ? isMissingColumnError(settingsResult.error, "app_settings", "near_safety_threshold_percent")
+    : false;
 
   const inventoryMap = new Map(inventoryResult.data.map((item) => [item.component_id, item]));
   const componentMap = new Map(componentsResult.data.map((component) => [component.id, component]));
@@ -262,7 +267,9 @@ export async function getPurchasingOverview(): Promise<{
       };
     }),
     {
-      nearSafetyThresholdPercent: settingsResult.data[0]?.near_safety_threshold_percent ?? 10
+      nearSafetyThresholdPercent: settingsMissingThresholdColumn
+        ? 10
+        : (settingsResult.data[0]?.near_safety_threshold_percent ?? 10)
     }
   );
 
@@ -302,6 +309,6 @@ export async function getPurchasingOverview(): Promise<{
       productionEntriesResult.error ??
       versionsResult.error ??
       productsResult.error ??
-      settingsResult.error
+      (settingsMissingThresholdColumn ? null : settingsResult.error)
   };
 }

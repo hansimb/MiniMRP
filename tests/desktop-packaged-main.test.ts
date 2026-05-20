@@ -66,6 +66,7 @@ test("desktop build script compiles the app with sqlite runtime env", () => {
   const buildScriptSource = fs.readFileSync("desktop/scripts/build.mjs", "utf8");
 
   assert.equal(packageJson.scripts["build:desktop"], "node desktop/scripts/build.mjs");
+  assert.equal(buildScriptSource.includes('MINIMRP_DESKTOP_RUNTIME: "1"'), true);
   assert.equal(buildScriptSource.includes('MINIMRP_RUNTIME: "sqlite"'), true);
   assert.equal(buildScriptSource.includes('NEXT_PUBLIC_MINIMRP_RUNTIME: "sqlite"'), true);
   assert.equal(buildScriptSource.includes("MINIMRP_DESKTOP_DATA_DIR"), true);

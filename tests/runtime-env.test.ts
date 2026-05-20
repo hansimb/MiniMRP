@@ -9,6 +9,7 @@ import {
 
 const originalRuntimeMode = process.env.MINIMRP_RUNTIME;
 const originalPublicRuntimeMode = process.env.NEXT_PUBLIC_MINIMRP_RUNTIME;
+const originalDesktopRuntime = process.env.MINIMRP_DESKTOP_RUNTIME;
 
 test.afterEach(() => {
   if (originalRuntimeMode === undefined) {
@@ -19,10 +20,16 @@ test.afterEach(() => {
 
   if (originalPublicRuntimeMode === undefined) {
     delete process.env.NEXT_PUBLIC_MINIMRP_RUNTIME;
+  } else {
+    process.env.NEXT_PUBLIC_MINIMRP_RUNTIME = originalPublicRuntimeMode;
+  }
+
+  if (originalDesktopRuntime === undefined) {
+    delete process.env.MINIMRP_DESKTOP_RUNTIME;
     return;
   }
 
-  process.env.NEXT_PUBLIC_MINIMRP_RUNTIME = originalPublicRuntimeMode;
+  process.env.MINIMRP_DESKTOP_RUNTIME = originalDesktopRuntime;
 });
 
 test("getRuntimeMode defaults to supabase", () => {
@@ -68,4 +75,18 @@ test("getRuntimeMode rejects unsupported runtime values", () => {
   process.env.MINIMRP_RUNTIME = "desktop";
 
   assert.throws(() => getRuntimeMode(), /MINIMRP_RUNTIME/);
+});
+
+test("getServerRuntimeMode treats desktop runtime flag as sqlite when runtime env is missing", () => {
+  delete process.env.MINIMRP_RUNTIME;
+  process.env.MINIMRP_DESKTOP_RUNTIME = "1";
+
+  assert.equal(getServerRuntimeMode(), "sqlite");
+});
+
+test("getRuntimeMode treats desktop runtime flag as sqlite when runtime env is missing", () => {
+  delete process.env.MINIMRP_RUNTIME;
+  process.env.MINIMRP_DESKTOP_RUNTIME = "1";
+
+  assert.equal(getRuntimeMode(), "sqlite");
 });

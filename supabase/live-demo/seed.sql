@@ -11,8 +11,8 @@ delete from product_versions;
 delete from components;
 delete from products;
 
-insert into app_settings (id, default_safety_stock) values
-  (true, 25);
+insert into app_settings (id, default_safety_stock, near_safety_threshold_percent) values
+  (true, 25, 10);
 
 insert into products (id, name, image) values
   ('10000000-0000-0000-0000-000000000001', 'SAI Spectrum Analyzer', null),
