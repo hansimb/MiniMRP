@@ -1024,29 +1024,41 @@ export async function deleteInventoryLotAction(formData: FormData) {
 
 export async function updateDefaultSafetyStockAction(formData: FormData) {
   const value = Number(requiredValue(formData.get("default_safety_stock"), "Default safety stock"));
-  const previous = getRow<{ id: number; default_safety_stock: number }>(
-    "select id, default_safety_stock from app_settings where id = 1"
+  const thresholdPercent = Number(
+    requiredValue(formData.get("near_safety_threshold_percent"), "Near safety threshold")
+  );
+  const previous = getRow<{ id: number; default_safety_stock: number; near_safety_threshold_percent: number }>(
+    "select id, default_safety_stock, near_safety_threshold_percent from app_settings where id = 1"
   );
   run(
-    `
-      insert into app_settings (id, default_safety_stock)
-      values (1, :default_safety_stock)
+      `
+      insert into app_settings (id, default_safety_stock, near_safety_threshold_percent)
+      values (1, :default_safety_stock, :near_safety_threshold_percent)
       on conflict(id)
-      do update set default_safety_stock = excluded.default_safety_stock
+      do update set
+        default_safety_stock = excluded.default_safety_stock,
+        near_safety_threshold_percent = excluded.near_safety_threshold_percent
     `,
-    { default_safety_stock: value }
+    {
+      default_safety_stock: value,
+      near_safety_threshold_percent: thresholdPercent
+    }
   );
 
   await recordHistory({
     entity_type: "settings",
     entity_id: "app_settings",
     action_type: "update",
-    summary: `Updated default safety stock to ${value}`,
+    summary: `Updated default safety stock to ${value} and near safety threshold to ${thresholdPercent}%`,
     old_value: stringifyHistoryValue(previous),
-    new_value: stringifyHistoryValue({ id: true, default_safety_stock: value })
+    new_value: stringifyHistoryValue({
+      id: true,
+      default_safety_stock: value,
+      near_safety_threshold_percent: thresholdPercent
+    })
   });
 
-  revalidateAppViews(["/components", "/settings", "/history"]);
+  revalidateAppViews(["/components", "/purchasing", "/settings", "/history"]);
   redirect("/settings");
 }
 

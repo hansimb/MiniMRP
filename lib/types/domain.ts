@@ -73,6 +73,7 @@ export interface HistoryEvent {
 export interface AppSettings {
   id: boolean;
   default_safety_stock: number;
+  near_safety_threshold_percent: number;
 }
 
 export interface Attachment {

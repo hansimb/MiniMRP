@@ -26,7 +26,7 @@ export async function getPurchasingOverview(): Promise<{
   noStore();
   const supabase = await createSupabaseClient();
   const adminSupabase = createSupabaseAdminClient();
-  const [componentsResult, inventoryResult, linksResult, sellerLinksResult, sellersResult, productionRequirementsResult, productionEntriesResult, versionsResult, productsResult] = await Promise.all([
+  const [componentsResult, inventoryResult, linksResult, sellerLinksResult, sellersResult, productionRequirementsResult, productionEntriesResult, versionsResult, productsResult, settingsResult] = await Promise.all([
     safeSelect<ComponentMaster>(
       supabase.from("components").select("id,sku,name,category,producer,value,safety_stock").order("category").order("name")
     ),
@@ -60,6 +60,12 @@ export async function getPurchasingOverview(): Promise<{
     ),
     safeSelect<{ id: string; name: string; image: string | null }>(
       supabase.from("products").select("id,name,image")
+    ),
+    safeSelect<{ id: boolean; default_safety_stock: number; near_safety_threshold_percent: number }>(
+      adminSupabase
+        .schema(PRIVATE_SCHEMA)
+        .from("app_settings")
+        .select("id,default_safety_stock,near_safety_threshold_percent")
     )
   ]);
 
@@ -254,7 +260,10 @@ export async function getPurchasingOverview(): Promise<{
         seller_base_url: sellerLink?.seller_base_url ?? null,
         seller_product_url: sellerLink?.seller_product_url ?? null
       };
-    })
+    }),
+    {
+      nearSafetyThresholdPercent: settingsResult.data[0]?.near_safety_threshold_percent ?? 10
+    }
   );
 
   const nearSafety: PurchasingItem[] = buckets.nearSafety
@@ -268,7 +277,6 @@ export async function getPurchasingOverview(): Promise<{
       };
     })
     .filter((item) => !productionShortageIds.has(item.id))
-    .filter((item) => item.quantity_available > 0 && item.quantity_available < item.safety_stock * 1.5)
     .sort((left, right) => left.quantity_available - right.quantity_available);
 
   const outOfStock: PurchasingItem[] = buckets.outOfStock
@@ -293,6 +301,7 @@ export async function getPurchasingOverview(): Promise<{
       productionRequirementsResult.error ??
       productionEntriesResult.error ??
       versionsResult.error ??
-      productsResult.error
+      productsResult.error ??
+      settingsResult.error
   };
 }

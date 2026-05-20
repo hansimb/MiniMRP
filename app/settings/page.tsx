@@ -38,6 +38,21 @@ export default async function SettingsPage(props: {
               defaultValue={settings?.default_safety_stock ?? 25}
             />
           </div>
+          <div className="field-group">
+            <label htmlFor="near-safety-threshold-settings">Near safety threshold</label>
+            <input
+              id="near-safety-threshold-settings"
+              className="input"
+              type="number"
+              min="0"
+              step="1"
+              name="near_safety_threshold_percent"
+              defaultValue={settings?.near_safety_threshold_percent ?? 10}
+            />
+            <div className="small muted">
+              Add components to the near safety purchase list when stock is within this percent above safety stock.
+            </div>
+          </div>
           <div className="action-row">
             <button className="button primary" type="submit">
               Save settings

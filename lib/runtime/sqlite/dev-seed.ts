@@ -541,9 +541,13 @@ export function seedSqliteDevDatabase(db: DatabaseSyncType): SqliteDevSeedSummar
   db.exec("begin transaction;");
 
   try {
-    run(db, "insert into app_settings (id, default_safety_stock) values (:id, :default_safety_stock)", {
+    run(
+      db,
+      "insert into app_settings (id, default_safety_stock, near_safety_threshold_percent) values (:id, :default_safety_stock, :near_safety_threshold_percent)",
+      {
       id: 1,
-      default_safety_stock: 25
+      default_safety_stock: 25,
+      near_safety_threshold_percent: 10
     });
 
     for (const product of products) {

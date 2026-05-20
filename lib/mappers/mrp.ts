@@ -159,7 +159,9 @@ export function buildPurchasingBuckets<T extends {
   quantity_available: number;
   purchase_price: number | null;
   lead_time: number | null;
-}>(items: T[]) {
+}>(items: T[], options?: { nearSafetyThresholdPercent?: number }) {
+  const nearSafetyThresholdPercent = options?.nearSafetyThresholdPercent ?? 10;
+
   const outOfStock = items
     .filter((item) => item.quantity_available <= 0)
     .map((item) => ({
@@ -173,7 +175,7 @@ export function buildPurchasingBuckets<T extends {
     .filter(
       (item) =>
         item.quantity_available > 0 &&
-        item.quantity_available <= item.safety_stock + 10
+        item.quantity_available <= item.safety_stock * (1 + nearSafetyThresholdPercent / 100)
     )
     .map((item) => ({
       ...item,

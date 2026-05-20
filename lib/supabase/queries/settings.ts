@@ -9,7 +9,7 @@ export async function getAppSettings(): Promise<{ item: AppSettings | null; erro
   const result = await supabase
     .schema(PRIVATE_SCHEMA)
     .from(APP_SETTINGS_TABLE)
-    .select("id,default_safety_stock")
+    .select("id,default_safety_stock,near_safety_threshold_percent")
     .eq("id", true)
     .maybeSingle<AppSettings>();
 
@@ -18,7 +18,7 @@ export async function getAppSettings(): Promise<{ item: AppSettings | null; erro
   }
 
   return {
-    item: result.data ?? { id: true, default_safety_stock: 25 },
+    item: result.data ?? { id: true, default_safety_stock: 25, near_safety_threshold_percent: 10 },
     error: null
   };
 }

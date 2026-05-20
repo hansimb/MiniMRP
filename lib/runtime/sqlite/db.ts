@@ -25,6 +25,19 @@ export function createDesktopDatabase(filename: string) {
 
 export function ensureSqliteSchema(db: DatabaseSyncType) {
   db.exec(ensureSqliteSchemaSql);
+  const appSettingsColumns = (
+    db.prepare("pragma table_info(app_settings)").all() as Array<{ name: string }>
+  ).map((column) => column.name);
+
+  if (!appSettingsColumns.includes("near_safety_threshold_percent")) {
+    db.exec(
+      "alter table app_settings add column near_safety_threshold_percent integer not null default 10;"
+    );
+  }
+
+  db.exec(
+    "update app_settings set near_safety_threshold_percent = coalesce(near_safety_threshold_percent, 10) where id = 1;"
+  );
 }
 
 export function listSqliteTables(db: DatabaseSyncType) {

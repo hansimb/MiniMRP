@@ -128,10 +128,11 @@ create index if not exists history_events_created_at_idx on history_events(creat
 
 create table if not exists app_settings (
   id integer primary key check (id = 1),
-  default_safety_stock integer not null default 25
+  default_safety_stock integer not null default 25,
+  near_safety_threshold_percent integer not null default 10
 );
 
-insert into app_settings (id, default_safety_stock)
-values (1, 25)
+insert into app_settings (id, default_safety_stock, near_safety_threshold_percent)
+values (1, 25, 10)
 on conflict(id) do nothing;
 `;

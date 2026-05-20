@@ -11,10 +11,13 @@ export async function updateDefaultSafetyStockAction(formData: FormData) {
   await requireAdminAction("/settings");
   const supabase = createSupabaseAdminClient();
   const value = Number(requiredValue(formData.get("default_safety_stock"), "Default safety stock"));
+  const thresholdPercent = Number(
+    requiredValue(formData.get("near_safety_threshold_percent"), "Near safety threshold")
+  );
   const previous = await supabase
     .schema(PRIVATE_SCHEMA)
     .from(APP_SETTINGS_TABLE)
-    .select("id,default_safety_stock")
+    .select("id,default_safety_stock,near_safety_threshold_percent")
     .eq("id", true)
     .maybeSingle();
 
@@ -24,7 +27,8 @@ export async function updateDefaultSafetyStockAction(formData: FormData) {
 
   const result = await supabase.schema(PRIVATE_SCHEMA).from(APP_SETTINGS_TABLE).upsert({
     id: true,
-    default_safety_stock: value
+    default_safety_stock: value,
+    near_safety_threshold_percent: thresholdPercent
   });
 
   if (result.error) {
@@ -35,12 +39,17 @@ export async function updateDefaultSafetyStockAction(formData: FormData) {
     entity_type: "settings",
     entity_id: "app_settings",
     action_type: "update",
-    summary: `Updated default safety stock to ${value}`,
+    summary: `Updated default safety stock to ${value} and near safety threshold to ${thresholdPercent}%`,
     old_value: stringifyHistoryValue(previous.data),
-    new_value: stringifyHistoryValue({ id: true, default_safety_stock: value })
+    new_value: stringifyHistoryValue({
+      id: true,
+      default_safety_stock: value,
+      near_safety_threshold_percent: thresholdPercent
+    })
   });
 
   revalidatePath("/components");
+  revalidatePath("/purchasing");
   revalidatePath("/settings");
   redirect("/settings");
 }

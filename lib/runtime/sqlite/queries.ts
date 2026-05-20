@@ -587,6 +587,10 @@ export async function getPurchasingOverview(): Promise<{
       || left.version_number.localeCompare(right.version_number)
     );
 
+    const settings = oneRow<{ near_safety_threshold_percent: number }>(
+      "select near_safety_threshold_percent from app_settings where id = 1"
+    );
+
     const buckets = buildPurchasingBuckets(
       components.map((component) => {
         const itemInventory = inventoryMap.get(component.id);
@@ -601,7 +605,8 @@ export async function getPurchasingOverview(): Promise<{
           seller_base_url: sellerLink?.seller_base_url ?? null,
           seller_product_url: sellerLink?.seller_product_url ?? null
         };
-      })
+      }),
+      { nearSafetyThresholdPercent: settings?.near_safety_threshold_percent ?? 10 }
     );
 
     const nearSafety: PurchasingItem[] = buckets.nearSafety
@@ -637,12 +642,18 @@ export async function getPurchasingOverview(): Promise<{
 
 export async function getAppSettings(): Promise<{ item: AppSettings | null; error: string | null }> {
   try {
-    const item = oneRow<{ id: number; default_safety_stock: number }>(
-      "select id, default_safety_stock from app_settings where id = 1"
+    const item = oneRow<{ id: number; default_safety_stock: number; near_safety_threshold_percent: number }>(
+      "select id, default_safety_stock, near_safety_threshold_percent from app_settings where id = 1"
     );
 
     return {
-      item: item ? { id: true, default_safety_stock: item.default_safety_stock } : { id: true, default_safety_stock: 25 },
+      item: item
+        ? {
+            id: true,
+            default_safety_stock: item.default_safety_stock,
+            near_safety_threshold_percent: item.near_safety_threshold_percent
+          }
+        : { id: true, default_safety_stock: 25, near_safety_threshold_percent: 10 },
       error: null
     };
   } catch (error) {
