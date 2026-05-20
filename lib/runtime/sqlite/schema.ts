@@ -106,6 +106,7 @@ create table if not exists production_requirements (
   component_id text not null references components(id) on delete cascade,
   gross_requirement real not null,
   inventory_consumed real not null,
+  inventory_consumed_cost real not null default 0,
   net_requirement real not null,
   created_at text not null default current_timestamp
 );

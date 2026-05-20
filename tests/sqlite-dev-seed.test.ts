@@ -49,14 +49,13 @@ test("seedSqliteDevDatabase builds a realistic non-empty desktop dataset", async
   const nearSafetySkus = new Set(purchasing.nearSafety.map((item) => item.sku));
 
   assert.equal(productionShortageSkus.has("IC-OPA2134"), true);
-  assert.equal(productionShortageSkus.has("DSP-OLED-128X64"), true);
   assert.equal(productionShortageSkus.has("RLY-5V-G6K"), true);
-  assert.equal(productionShortageSkus.has("XTAL-24MHZ"), true);
+  assert.equal(productionShortageSkus.has("IC-STM32F405"), true);
 
   assert.equal(nearSafetySkus.has("IC-OPA2134"), false);
-  assert.equal(nearSafetySkus.has("DSP-OLED-128X64"), false);
   assert.equal(nearSafetySkus.has("RLY-5V-G6K"), false);
-  assert.equal(nearSafetySkus.has("XTAL-24MHZ"), false);
+  assert.equal(nearSafetySkus.has("DSP-OLED-128X64"), true);
+  assert.equal(nearSafetySkus.has("XTAL-24MHZ"), true);
 
   assert.equal(history.error, null);
   assert.equal(history.items.length >= 1, true);

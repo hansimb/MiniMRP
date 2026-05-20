@@ -35,6 +35,16 @@ export function ensureSqliteSchema(db: DatabaseSyncType) {
     );
   }
 
+  const productionRequirementColumns = (
+    db.prepare("pragma table_info(production_requirements)").all() as Array<{ name: string }>
+  ).map((column) => column.name);
+
+  if (!productionRequirementColumns.includes("inventory_consumed_cost")) {
+    db.exec(
+      "alter table production_requirements add column inventory_consumed_cost real not null default 0;"
+    );
+  }
+
   db.exec(
     "insert into app_settings (id, default_safety_stock) values (1, 25) on conflict(id) do nothing;"
   );

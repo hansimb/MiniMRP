@@ -111,8 +111,10 @@ export interface VersionDetail extends ProductVersion {
     reserved?: {
       gross_requirement: number;
       inventory_consumed: number;
+      inventory_consumed_cost?: number;
       net_requirement: number;
       entry_inventory_consumed: number | null;
+      entry_inventory_consumed_cost?: number | null;
       active_production_quantity: number;
       active_entry_count: number;
     };
@@ -187,6 +189,7 @@ export interface ProductionRequirement {
   component_id: string;
   gross_requirement: number;
   inventory_consumed: number;
+  inventory_consumed_cost?: number;
   net_requirement: number;
   created_at: string;
 }

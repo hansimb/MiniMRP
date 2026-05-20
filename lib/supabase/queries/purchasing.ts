@@ -130,6 +130,15 @@ export async function getPurchasingOverview(): Promise<{
           if (!component) {
             return null;
           }
+          const metrics = buildProductionShortageMetrics({
+            totalGrossRequirement: item.gross_requirement,
+            totalNetRequirement: item.net_requirement,
+            availableInventory: inventoryMap.get(component.id)?.quantity_available ?? 0,
+            safetyStock: component.safety_stock
+          });
+          if (metrics.netNeed <= 0) {
+            return null;
+          }
           const sellerLink = sellerLinkMap.get(item.component_id);
           productionShortageIds.add(component.id);
           return {
@@ -145,12 +154,12 @@ export async function getPurchasingOverview(): Promise<{
             quantity_available: inventoryMap.get(component.id)?.quantity_available ?? 0,
             purchase_price: inventoryMap.get(component.id)?.purchase_price ?? null,
             lead_time: leadTimeMap.get(component.id) ?? null,
-            net_need: item.net_requirement,
+            net_need: metrics.netNeed,
             seller_id: sellerLink?.seller_id ?? null,
             seller_name: sellerLink?.seller_name ?? null,
             seller_base_url: sellerLink?.seller_base_url ?? null,
             seller_product_url: sellerLink?.seller_product_url ?? null,
-            recommended_order_quantity: item.net_requirement + component.safety_stock,
+            recommended_order_quantity: metrics.recommendedOrderQuantity,
             production_entry_id: entry.id,
             product_name: product?.name ?? "Unknown product",
             version_number: version?.version_number ?? "-",

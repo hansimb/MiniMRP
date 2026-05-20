@@ -34,6 +34,7 @@ test("summarizeReservedRequirements aggregates reserved values per component", (
   assert.deepEqual(summary.c1, {
     grossRequirement: 16,
     inventoryConsumed: 9,
+    inventoryConsumedCost: 0,
     netRequirement: 7,
     activeProductionQuantity: 5,
     activeEntryCount: 2
@@ -41,6 +42,7 @@ test("summarizeReservedRequirements aggregates reserved values per component", (
   assert.deepEqual(summary.c2, {
     grossRequirement: 6,
     inventoryConsumed: 1,
+    inventoryConsumedCost: 0,
     netRequirement: 5,
     activeProductionQuantity: 3,
     activeEntryCount: 1
@@ -178,6 +180,7 @@ test("planProductionCompletionConsumption consumes remaining net requirement FIF
     {
       id: "req-1",
       inventory_consumed: 10,
+      inventory_consumed_cost: 10.2,
       net_requirement: 0
     }
   ]);

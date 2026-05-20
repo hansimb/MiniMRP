@@ -68,6 +68,7 @@ export function consumeInventoryLotsFifo(lots: InventoryLot[], requiredQuantity:
 
   let quantityToConsume = requiredQuantity;
   let inventoryConsumed = 0;
+  let consumedValue = 0;
 
   for (const lot of updatedLots) {
     if (quantityToConsume <= 0) {
@@ -78,11 +79,13 @@ export function consumeInventoryLotsFifo(lots: InventoryLot[], requiredQuantity:
     lot.quantity_remaining = roundQuantity(lot.quantity_remaining - consumed);
     quantityToConsume = roundQuantity(quantityToConsume - consumed);
     inventoryConsumed = roundQuantity(inventoryConsumed + consumed);
+    consumedValue = roundCurrency(consumedValue + consumed * lot.unit_cost);
   }
 
   return {
     updatedLots,
     inventoryConsumed,
+    consumedValue,
     remainingRequirement: roundQuantity(Math.max(quantityToConsume, 0))
   };
 }

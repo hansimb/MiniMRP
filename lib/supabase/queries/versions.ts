@@ -143,16 +143,18 @@ export async function getVersionDetail(
       references: string[];
       quantity: number;
       lead_time: number | null;
-      inventory: InventoryItem | null;
-      reserved: {
-        gross_requirement: number;
-        inventory_consumed: number;
-        net_requirement: number;
-        entry_inventory_consumed: number | null;
-        active_production_quantity: number;
-        active_entry_count: number;
-      };
-    }
+        inventory: InventoryItem | null;
+        reserved: {
+          gross_requirement: number;
+          inventory_consumed: number;
+          inventory_consumed_cost?: number;
+          net_requirement: number;
+          entry_inventory_consumed: number | null;
+          entry_inventory_consumed_cost?: number | null;
+          active_production_quantity: number;
+          active_entry_count: number;
+        };
+      }
   >();
 
   for (const reference of referencesResult.data) {

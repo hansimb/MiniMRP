@@ -1,6 +1,6 @@
 import type { SQLInputValue } from "node:sqlite";
 import { getStoredFileName, isImageFilePath } from "../../mappers/file-storage.ts";
-import { buildMrpRows, buildPurchasingBuckets, calculateProductionLongestLeadTime } from "../../mappers/mrp.ts";
+import { buildMrpRows, buildProductionShortageMetrics, buildPurchasingBuckets, calculateProductionLongestLeadTime } from "../../mappers/mrp.ts";
 import { summarizeReservedRequirements } from "../../mappers/production.ts";
 import type {
   AppSettings,
@@ -422,7 +422,7 @@ export async function getPurchasingOverview(): Promise<{
     const sellers = getAllSellers();
     const sellerMap = new Map(sellers.map((seller) => [seller.id, seller]));
     const requirements = allRows<ProductionRequirement>(
-      "select id, production_entry_id, component_id, gross_requirement, inventory_consumed, net_requirement, created_at from production_requirements order by created_at desc"
+      "select id, production_entry_id, component_id, gross_requirement, inventory_consumed, inventory_consumed_cost, net_requirement, created_at from production_requirements order by created_at desc"
     );
     const activeEntries = allRows<ProductionEntry>(
       "select id, version_id, quantity, status, completed_at, created_at from production_entries where status = 'under_production' order by created_at desc"
@@ -484,6 +484,15 @@ export async function getPurchasingOverview(): Promise<{
             if (!component) {
               return null;
             }
+            const metrics = buildProductionShortageMetrics({
+              totalGrossRequirement: item.gross_requirement,
+              totalNetRequirement: item.net_requirement,
+              availableInventory: inventoryMap.get(component.id)?.quantity_available ?? 0,
+              safetyStock: component.safety_stock
+            });
+            if (metrics.netNeed <= 0) {
+              return null;
+            }
             const sellerLink = sellerLinkMap.get(component.id);
             productionShortageIds.add(component.id);
             return {
@@ -499,12 +508,12 @@ export async function getPurchasingOverview(): Promise<{
               quantity_available: inventoryMap.get(component.id)?.quantity_available ?? 0,
               purchase_price: inventoryMap.get(component.id)?.purchase_price ?? null,
               lead_time: leadTimeMap.get(component.id) ?? null,
-              net_need: item.net_requirement,
+              net_need: metrics.netNeed,
               seller_id: sellerLink?.seller_id ?? null,
               seller_name: sellerLink?.seller_name ?? null,
               seller_base_url: sellerLink?.seller_base_url ?? null,
               seller_product_url: sellerLink?.seller_product_url ?? null,
-              recommended_order_quantity: item.net_requirement + component.safety_stock,
+              recommended_order_quantity: metrics.recommendedOrderQuantity,
               production_entry_id: entry.id,
               product_name: product?.name ?? "Unknown product",
               version_number: version?.version_number ?? "-",
@@ -703,7 +712,7 @@ export async function getVersionDetail(
     const activeRequirements = activeEntryIds.length > 0
       ? allRows<ProductionRequirement>(
           `
-            select id, production_entry_id, component_id, gross_requirement, inventory_consumed, net_requirement, created_at
+            select id, production_entry_id, component_id, gross_requirement, inventory_consumed, inventory_consumed_cost, net_requirement, created_at
             from production_requirements
             where production_entry_id in (${activeEntryIds.map((_, index) => `:entry${index}`).join(", ")})
           `,
@@ -723,11 +732,16 @@ export async function getVersionDetail(
       }))
     );
     const entryRequirementMap = new Map<string, number>();
+    const entryRequirementCostMap = new Map<string, number>();
     if (options?.productionEntryId) {
       for (const item of activeRequirements.filter((requirement) => requirement.production_entry_id === options.productionEntryId)) {
         entryRequirementMap.set(
           item.component_id,
           (entryRequirementMap.get(item.component_id) ?? 0) + item.inventory_consumed
+        );
+        entryRequirementCostMap.set(
+          item.component_id,
+          (entryRequirementCostMap.get(item.component_id) ?? 0) + (item.inventory_consumed_cost ?? 0)
         );
       }
     }
@@ -757,8 +771,10 @@ export async function getVersionDetail(
         reserved: {
           gross_requirement: number;
           inventory_consumed: number;
+          inventory_consumed_cost: number;
           net_requirement: number;
           entry_inventory_consumed: number | null;
+          entry_inventory_consumed_cost: number | null;
           active_production_quantity: number;
           active_entry_count: number;
         };
@@ -785,8 +801,10 @@ export async function getVersionDetail(
           reserved: {
             gross_requirement: reservedSummary[component.id]?.grossRequirement ?? 0,
             inventory_consumed: reservedSummary[component.id]?.inventoryConsumed ?? 0,
+            inventory_consumed_cost: reservedSummary[component.id]?.inventoryConsumedCost ?? 0,
             net_requirement: reservedSummary[component.id]?.netRequirement ?? 0,
             entry_inventory_consumed: entryRequirementMap.get(component.id) ?? null,
+            entry_inventory_consumed_cost: entryRequirementCostMap.get(component.id) ?? null,
             active_production_quantity: reservedSummary[component.id]?.activeProductionQuantity ?? 0,
             active_entry_count: reservedSummary[component.id]?.activeEntryCount ?? 0
           }

@@ -81,7 +81,17 @@ export function buildMrpRows(components: VersionComponent[], buildQuantity: numb
     const safetyStock = row.component.safety_stock ?? 0;
     const netRequirement = Math.max(grossRequirement - availableInventory, 0);
     const reservedForThisCalculation = Math.min(availableInventory, grossRequirement);
-    const grossCost = unitPrice === null ? null : roundCurrency(grossRequirement * unitPrice);
+    const reservedForEntry = row.reserved?.entry_inventory_consumed ?? null;
+    const reservedCostForEntry = row.reserved?.entry_inventory_consumed_cost ?? null;
+    const unreservedGrossRequirement = Math.max(grossRequirement - (reservedForEntry ?? 0), 0);
+    const grossCost =
+      reservedCostForEntry !== null
+        ? unitPrice === null && unreservedGrossRequirement > 0
+          ? null
+          : roundCurrency(reservedCostForEntry + (unitPrice === null ? 0 : unreservedGrossRequirement * unitPrice))
+        : unitPrice === null
+          ? null
+          : roundCurrency(grossRequirement * unitPrice);
     const netCost = unitPrice === null ? null : roundCurrency(netRequirement * unitPrice);
 
     return {
@@ -104,7 +114,7 @@ export function buildMrpRows(components: VersionComponent[], buildQuantity: numb
       grossCost,
       netCost,
       reservedForThisCalculation,
-      reservedForEntry: row.reserved?.entry_inventory_consumed ?? null,
+      reservedForEntry,
       reservedInventory: row.reserved?.inventory_consumed ?? 0,
       activeProductionQuantity: row.reserved?.active_production_quantity ?? 0
     };
