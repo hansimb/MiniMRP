@@ -5,6 +5,10 @@ import test from "node:test";
 
 test("runtime query facade exists", () => {
   assert.equal(fs.existsSync("lib/runtime/supabase/queries.ts"), true);
+  const runtimeIndexSource = fs.readFileSync("lib/runtime/index.ts", "utf8");
+
+  assert.equal(runtimeIndexSource.includes('import("./sqlite/queries.ts")'), true);
+  assert.equal(runtimeIndexSource.includes('import(`./${runtimeMode}/queries.ts`)'), false);
 });
 
 test("shared app does not import supabase queries or actions directly", () => {

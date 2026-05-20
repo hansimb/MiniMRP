@@ -3,6 +3,8 @@ import { createProductAction } from "@/lib/runtime/actions";
 import { getRuntimeMode, getRuntimeQueries } from "@/lib/runtime";
 import { Badge, EmptyState, ModalTrigger, Notice, PageHeader, Panel } from "@/shared/ui";
 
+export const dynamic = "force-dynamic";
+
 export default async function ProductsPage() {
   const runtimeMode = getRuntimeMode();
   const queries = await getRuntimeQueries();

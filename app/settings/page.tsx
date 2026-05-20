@@ -3,6 +3,8 @@ import { updateDefaultSafetyStockAction } from "@/lib/runtime/actions";
 import { getRuntimeQueries } from "@/lib/runtime";
 import { Notice, PageHeader, Panel } from "@/shared/ui";
 
+export const dynamic = "force-dynamic";
+
 export default async function SettingsPage(props: {
   searchParams?: Promise<{ importError?: string }>;
 }) {

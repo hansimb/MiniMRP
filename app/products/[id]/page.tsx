@@ -6,6 +6,8 @@ import { deleteProductAction, updateProductAction } from "@/lib/runtime/actions"
 import { getRuntimeQueries } from "@/lib/runtime";
 import { BackLink, ModalTrigger, Notice, PageHeader } from "@/shared/ui";
 
+export const dynamic = "force-dynamic";
+
 export default async function ProductDetailPage(props: {
   params: Promise<{ id: string }>;
   searchParams?: Promise<{ imageError?: string; deleteError?: string }>;

@@ -4,6 +4,8 @@ import { OutOfStockPanel } from "@/features/purchasing/components/out-of-stock-p
 import { getRuntimeQueries } from "@/lib/runtime";
 import { Notice, PageHeader } from "@/shared/ui";
 
+export const dynamic = "force-dynamic";
+
 export default async function PurchasingPage() {
   const queries = await getRuntimeQueries();
   const { productionShortages, nearSafety, outOfStock, error } = await queries.getPurchasingOverview();

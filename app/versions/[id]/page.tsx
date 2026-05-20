@@ -8,6 +8,8 @@ import { buildMrpRows, calculateVersionUnitCost, summarizeMrpRows } from "@/lib/
 import { getRuntimeQueries } from "@/lib/runtime";
 import { Notice, PageHeader } from "@/shared/ui";
 
+export const dynamic = "force-dynamic";
+
 export default async function VersionDetailPage(props: {
   params: Promise<{ id: string }>;
   searchParams?: Promise<{

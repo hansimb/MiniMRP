@@ -2,6 +2,8 @@ import { ProductionListPanel } from "@/features/production/components/production
 import { getRuntimeQueries } from "@/lib/runtime";
 import { Notice, PageHeader } from "@/shared/ui";
 
+export const dynamic = "force-dynamic";
+
 export default async function ProductionPage(props: {
   searchParams?: Promise<{ error?: string }>;
 }) {

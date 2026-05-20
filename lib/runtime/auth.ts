@@ -10,7 +10,12 @@ type RuntimeAdminFlags = {
 
 async function getRuntimeAuthModule() {
   const runtimeMode = getRuntimeMode();
-  return import(`./${runtimeMode}/auth.ts`);
+
+  if (runtimeMode === "sqlite") {
+    return import("./sqlite/auth.ts");
+  }
+
+  return import("./supabase/auth.ts");
 }
 
 export async function getRuntimeAdminFlags(): Promise<RuntimeAdminFlags> {
