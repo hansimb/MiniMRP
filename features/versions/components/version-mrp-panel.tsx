@@ -23,6 +23,7 @@ export function VersionMrpPanel(props: {
   };
 }) {
   const [draftQuantity, setDraftQuantity] = useState(String(props.requestedQuantity));
+  const hasEstimatedUnitPrices = props.rows.some((row) => row.unitPriceIsEstimate);
 
   const pendingQuantity = useMemo(() => {
     const parsed = Number(draftQuantity);
@@ -128,7 +129,7 @@ export function VersionMrpPanel(props: {
                   <td>{row.reservedForEntry ?? "-"}</td>
                   <td>{row.reservedInventory ?? 0}</td>
                   <td>{row.leadTime ?? "-"}</td>
-                  <td>{row.unitPrice === null ? "-" : row.unitPrice.toFixed(4)}</td>
+                  <td>{row.unitPrice === null ? "-" : `${row.unitPrice.toFixed(4)}${row.unitPriceIsEstimate ? "*" : ""}`}</td>
                   <td>{row.grossCost === null ? "-" : row.grossCost.toFixed(4)}</td>
                   <td>{row.netCost === null ? "-" : row.netCost.toFixed(4)}</td>
                 </tr>
@@ -147,6 +148,11 @@ export function VersionMrpPanel(props: {
               </tr>
             </tbody>
           </table>
+          {hasEstimatedUnitPrices ? (
+            <div className="small muted" style={{ marginTop: 12 }}>
+              * means assumed price based on the latest purchase lot when current inventory is zero.
+            </div>
+          ) : null}
         </div>
       )}
     </Panel>

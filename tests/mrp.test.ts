@@ -79,6 +79,7 @@ test("buildMrpRows calculates all MRP values for out-of-stock parts when a unit 
   assert.equal(rows[0]?.leadTime, 7);
   assert.equal(rows[0]?.availableInventory, 0);
   assert.equal(rows[0]?.unitPrice, 0.125);
+  assert.equal(rows[0]?.unitPriceIsEstimate, true);
   assert.equal(rows[0]?.grossRequirement, 12);
   assert.equal(rows[0]?.netRequirement, 12);
   assert.equal(rows[0]?.reservedForThisCalculation, 0);
@@ -133,6 +134,7 @@ test("summarizeMrpRows returns totals for numeric columns", () => {
       leadTime: 7,
       availableInventory: 3,
       unitPrice: 1.5,
+      unitPriceIsEstimate: false,
       grossRequirement: 10,
       netRequirement: 7,
       grossCost: 15,
@@ -155,6 +157,7 @@ test("summarizeMrpRows returns totals for numeric columns", () => {
       leadTime: 14,
       availableInventory: 6,
       unitPrice: 2,
+      unitPriceIsEstimate: false,
       grossRequirement: 5,
       netRequirement: 0,
       grossCost: 10,
@@ -205,6 +208,7 @@ test("buildMrpRows carries lead time through to results", () => {
 
   assert.equal(rows[0]?.netRequirement, 2);
   assert.equal(rows[0]?.leadTime, 21);
+  assert.equal(rows[0]?.unitPriceIsEstimate, false);
 });
 
 test("buildPurchasingBuckets separates production-adjacent buckets", () => {
@@ -353,6 +357,7 @@ test("calculateProductionLongestLeadTime ignores covered rows", () => {
       leadTime: 21,
       availableInventory: 10,
       unitPrice: 1,
+      unitPriceIsEstimate: false,
       grossRequirement: 5,
       netRequirement: 0,
       grossCost: 5,
@@ -374,6 +379,7 @@ test("calculateProductionLongestLeadTime ignores covered rows", () => {
       leadTime: 14,
       availableInventory: 1,
       unitPrice: 2,
+      unitPriceIsEstimate: false,
       grossRequirement: 5,
       netRequirement: 4,
       grossCost: 10,
@@ -402,6 +408,7 @@ test("calculateProductionLongestLeadTime returns zero when all parts are covered
       leadTime: 21,
       availableInventory: 10,
       unitPrice: 1,
+      unitPriceIsEstimate: false,
       grossRequirement: 5,
       netRequirement: 0,
       grossCost: 5,

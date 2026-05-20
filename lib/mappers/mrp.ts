@@ -16,6 +16,7 @@ export interface MrpRow {
   leadTime: number | null;
   availableInventory: number;
   unitPrice: number | null;
+  unitPriceIsEstimate: boolean;
   grossRequirement: number;
   netRequirement: number;
   grossCost: number | null;
@@ -76,6 +77,7 @@ export function buildMrpRows(components: VersionComponent[], buildQuantity: numb
     const unitPrice = row.inventory?.purchase_price ?? null;
     const grossRequirement = row.quantity * buildQuantity;
     const availableInventory = row.inventory?.quantity_available ?? 0;
+    const unitPriceIsEstimate = unitPrice !== null && availableInventory <= 0;
     const safetyStock = row.component.safety_stock ?? 0;
     const netRequirement = Math.max(grossRequirement - availableInventory, 0);
     const reservedForThisCalculation = Math.min(availableInventory, grossRequirement);
@@ -96,6 +98,7 @@ export function buildMrpRows(components: VersionComponent[], buildQuantity: numb
       leadTime: row.lead_time ?? null,
       availableInventory,
       unitPrice,
+      unitPriceIsEstimate,
       grossRequirement,
       netRequirement,
       grossCost,
