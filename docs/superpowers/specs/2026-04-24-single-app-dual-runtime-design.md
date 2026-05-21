@@ -1,5 +1,7 @@
 # Single-App Dual-Runtime Design
 
+> Status update on May 21, 2026: the `supabase` runtime is now deprecated. This document remains useful as migration history and runtime-boundary context, but desktop and local-first web are the maintained directions going forward.
+
 ## Goal
 
 MiniMRP must remain one application, edited in one place, while supporting two runtime modes:

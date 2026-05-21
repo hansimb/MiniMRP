@@ -2,6 +2,12 @@
 
 MiniMRP is a small internal MRP (material requirements planning) system for small businesses specializing electronic products. It is designed to manage products, versions, BOMs, components, inventory, production entries, and purchasing needs without the overhead of a full ERP system.
 
+## Status Note
+
+- `desktop` is a primary runtime and the main maintained application target
+- `local web` is the planned primary hosted/runtime direction for ready-to-use live usage without a managed backend
+- `supabase` runtime is deprecated and is no longer the recommended deployment path
+
 ## Main Features
 
 - Product and version management
@@ -16,8 +22,9 @@ MiniMRP is a small internal MRP (material requirements planning) system for smal
 
 ## Runtimes
 
-- web version with supabase integration
-- Local desktop version, usin local SQLite, no login, no supabase
+- Local desktop version using local SQLite
+- Local web version is the intended hosted direction
+- Deprecated Supabase-backed web runtime kept only for legacy compatibility during transition
 
 ## How It Works
 
@@ -32,6 +39,7 @@ MiniMRP is a small internal MRP (material requirements planning) system for smal
 - [`app`](./app): Next.js routes and thin page-level composition
 - [`features`](./features): feature-specific UI and page sections
 - [`shared/ui`](./shared/ui): reusable UI building blocks shared across features
+- [`lib/runtime`](./lib/runtime): shared runtime boundary for maintained local-first paths and legacy adapters
 - [`lib/supabase/actions`](./lib/supabase/actions): server actions grouped by domain
 - [`lib/supabase/queries`](./lib/supabase/queries): read-side data access grouped by domain
 - [`lib/mappers`](./lib/mappers): calculation and transformation logic such as MRP
@@ -48,7 +56,12 @@ Note about naming: the business domain still uses the `/components` route in the
 npm install
 ```
 
-2. Add your Supabase keys to `.env`:
+2. Choose the runtime path you are working on:
+
+- Preferred: desktop / local-first runtime work
+- Legacy only: deprecated Supabase runtime
+
+3. If you are explicitly working on the deprecated Supabase runtime, add your Supabase keys to `.env`:
 
 ```
 NEXT_PUBLIC_SUPABASE_URL=
@@ -82,6 +95,15 @@ npm run dev:desktop
 ```
 
 5. App opens on your windows desktop
+
+## Deprecated Supabase Runtime
+
+The Supabase runtime remains in the repository only as a legacy compatibility path during transition work.
+
+- It is deprecated
+- It is not the recommended deployment target
+- It should not be chosen for new live environments
+- Desktop and local-first web are the maintained directions
 
 ## Storage Setup
 
