@@ -85,6 +85,14 @@ export function AppShell({
         </nav>
       </aside>
       <main className="content">
+        <div className="live-demo-banner" role="status">
+          <strong>LIVE DEMO</strong>
+          <span>
+            All visitors share the same demo data. Changes are temporary and
+            the demo resets periodically. Do not enter real or sensitive
+            information.
+          </span>
+        </div>
         {children}
         {fixLoopProjectName ? (
           <AgenticFixLoop

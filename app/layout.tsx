@@ -6,7 +6,11 @@ import { AppShell } from "@/shared/ui";
 
 export const metadata: Metadata = {
   title: "MiniMRP",
-  description: "Internal MRP tool for Spectrum Audio Instruments"
+  description: "Internal MRP tool for Spectrum Audio Instruments",
+  robots: {
+    index: false,
+    follow: false
+  }
 };
 
 export default function RootLayout({ children }: { children: ReactNode }) {
